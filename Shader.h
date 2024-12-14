@@ -89,6 +89,11 @@ public:
         glUniform1i(glGetUniformLocation(ID, name.c_str()), value); 
     }
     // ------------------------------------------------------------------------
+    // Set a vec3 uniform (used for mainColor, outlineColor)
+    void setVec3(const std::string &name, const glm::vec3 &value) const
+    {
+        glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
+    }
     void setFloat(const std::string &name, float value) const
     { 
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value); 
@@ -97,6 +102,38 @@ public:
     void setMat4(const std::string &name, const glm::mat4 &value) {
       glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
     }
+
+/*
+    // Set uniform functions for different data types
+    void setUniform(const std::string& name, const glm::mat4& mat) {
+        GLint location = glGetUniformLocation(ID, name.c_str());
+        if (location != -1) {
+            glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
+        }
+    }
+
+    void setUniform(const std::string& name, const glm::vec3& vec) {
+        GLint location = glGetUniformLocation(ID, name.c_str());
+        if (location != -1) {
+            glUniform3fv(location, 1, &vec[0]);
+        }
+    }
+
+    void setUniform(const std::string& name, const glm::vec4& vec) {
+        GLint location = glGetUniformLocation(ID, name.c_str());
+        if (location != -1) {
+            glUniform4fv(location, 1, &vec[0]);
+        }
+    }
+
+    void setUniform(const std::string& name, float value) {
+        GLint location = glGetUniformLocation(ID, name.c_str());
+        if (location != -1) {
+            glUniform1f(location, value);
+        }
+    }*/
+
+
 
 private:
     // utility function for checking shader compilation/linking errors.

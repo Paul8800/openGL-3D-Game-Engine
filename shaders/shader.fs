@@ -1,31 +1,21 @@
+
 #version 330 core
 
-in vec2 fragPosition;  // The position passed from the vertex shader
+in vec2 TexCoord;
+out vec4 FragColor;
 
-uniform vec3 mainColor;    // The color of the main shape
-uniform vec3 outlineColor; // The color of the outline
-uniform float outlineThickness;  // Outline thickness
-uniform float edgeDistance;  // A small value to help determine outline borders
+uniform vec3 color;
+uniform vec3 outlineColor;
+uniform float outlineThickness;
 
-out vec4 fragColor;
+void main() {
+    float edgeThreshold = 0.5 - outlineThickness;
 
-void main()
-{
-    // Calculate the distance from the center of the shape (0, 0) to the fragment position
-    float distanceFromCenter = length(fragPosition);
-
-    // If the distance is less than the outline thickness, we draw the outline
-    if (distanceFromCenter > (1.0 - outlineThickness) && distanceFromCenter < 1.0)
-    {
-        fragColor = vec4(outlineColor, 1.0);  // Apply outline color
-    }
-    else if (distanceFromCenter < 1.0)
-    {
-        fragColor = vec4(mainColor, 1.0);  // Apply main shape color
-    }
-    else
-    {
-        discard;  // Outside the shape, discard
+    if (TexCoord.x < outlineThickness || TexCoord.x > 1.0 - outlineThickness || 
+        TexCoord.y < outlineThickness || TexCoord.y > 1.0 - outlineThickness) {
+        FragColor = vec4(outlineColor, 1.0); // Outline color
+    } else {
+        FragColor = vec4(color, 1.0); // Main color
     }
 }
 

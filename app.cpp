@@ -203,6 +203,7 @@ int main()
         //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         //glClearColor(0.529f, 0.808f, 0.9254f, 1.0f); //rgba(122,168,254,255)
         glClearColor(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f);
+        //glClearColor(50.0f / 255.0f, 85.0f / 255.0f, 24.0f / 255.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
@@ -241,24 +242,31 @@ int main()
         ourShader->use();
         glBindVertexArray(VAO);
 
+        // Set the outline and main colors
+        /*
+        ourShader->setVec3("mainColor", glm::vec3(0.5f, 0.0f, 0.0f));  // Red main color
+        ourShader->setVec3("outlineColor", glm::vec3(0.0f, 0.0f, 0.0f));  // Black outline
 
+        // Set the outline thickness and edge distance
+        ourShader->setFloat("outlineThickness", 0.05f);
+        ourShader->setFloat("edgeDistance", 0.1f);  // You can adjust this as needed
+                                                    */
 
         
-        GLuint mainColorLocation, outlineColorLocation, outlineThicknessLocation, modelViewProjectionLocation;
-        glm::mat4 modelViewProjection;
+        // Pass 1: Render the object with a larger model to create the outline
+        /*model = glm::scale(glm::mat4(1.0f), glm::vec3(1.1f));  // Scale by 10%
+        ourShader->setUniform("model", model);
+        ourShader->setUniform("color", {1.0f, 0.0f, 0.0f});  // Set outline color
+        // Set outline color (red)
+        ourShader->setUniform("outlineColor", glm::vec3(0.0f, 0.0f, 0.0f));  // Red
+        // Set outline thickness (scale factor)
+        ourShader->setUniform("outlineThickness", 0.1f);  // Thicker outline
+*/
 
-        mainColorLocation = glGetUniformLocation(ourShader->ID, "mainColor");
-        outlineColorLocation = glGetUniformLocation(ourShader->ID, "outlineColor");
-        outlineThicknessLocation = glGetUniformLocation(ourShader->ID, "outlineThickness");
-        modelViewProjectionLocation = glGetUniformLocation(ourShader->ID, "modelViewProjection");
-
-        glUniform3f(mainColorLocation, 1.0f, 0.0f, 0.0f);  // Red main color
-        glUniform3f(outlineColorLocation, 0.0f, 0.0f, 0.0f); // Black outline color
-        glUniform1f(outlineThicknessLocation, 0.05f);
-        //glUniform1f(edgeDistanceLocation, 0.02f);  // Optional fine-tuning
-        glUniformMatrix4fv(modelViewProjectionLocation, 1, GL_FALSE, glm::value_ptr(modelViewProjection));        
-
-
+        // Set uniform values
+        ourShader->setVec3("color", glm::vec3(1.0f, 0.0f, 0.0f)); // Red color  
+        ourShader->setVec3("outlineColor", glm::vec3(0.0f, 0.0f, 0.0f)); // Black outline color  
+        ourShader->setFloat("outlineThickness", 0.05f);
 
         genRectangleEBO(block, {0, 0, 0});
         genRectangleEBO(block, {5, -1, 0});

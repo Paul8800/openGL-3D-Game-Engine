@@ -21,8 +21,20 @@
 #include <mutex>
 #include <atomic>
 
+struct Cube {
+    const std::array<int, 3> location; // Center of the cube
+    const std::array<int, 3> scaleAmount; // Side length of the cube
+    
+    // Constructor to initialize location and scaleAmount
+    Cube(const std::array<int, 3>& loc, const std::array<int, 3>& scale)
+        : location(loc), scaleAmount(scale) {}
+};
+
+std::vector<struct Cube> cubeObjectList;
+
 std::array<float, 120> makeRectangleEBO(const std::array<float, 3> location, const std::array<float, 3> dimensions);
-void genRectangleEBO(const std::array<float, 120> vertices, const std::array<int, 3> location);
+void genRectangleEBO(const std::array<float, 120> vertices, const std::array<int, 3> location, const std::array<int, 3> scaleAmmount = {1, 1, 1});
+bool checkCollision(const Cube& cubeA, const Cube& cubeB);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -188,6 +200,14 @@ int main()
 
 
 
+       
+  cubeObjectList.push_back({ Cube({0, 7, 0}, {1, 7, 3}) });
+  cubeObjectList.push_back({ Cube({5, 1, 0}, {1, 1, 1}) });
+  cubeObjectList.push_back({ Cube({-25, 0, 25}, {50, 5, 50}) });
+
+
+
+
     // render loop
     // ----------------------------------------------------------------------------------------------------------------------------------------------
     while (!glfwWindowShouldClose(window)) {
@@ -239,37 +259,22 @@ int main()
 
 
         // render the meshes
-        ourShader->use();
+        ourShader->use(); //shader for white shapes with black outline
         glBindVertexArray(VAO);
 
-        // Set the outline and main colors
-        /*
-        ourShader->setVec3("mainColor", glm::vec3(0.5f, 0.0f, 0.0f));  // Red main color
-        ourShader->setVec3("outlineColor", glm::vec3(0.0f, 0.0f, 0.0f));  // Black outline
-
-        // Set the outline thickness and edge distance
-        ourShader->setFloat("outlineThickness", 0.05f);
-        ourShader->setFloat("edgeDistance", 0.1f);  // You can adjust this as needed
-                                                    */
-
         
-        // Pass 1: Render the object with a larger model to create the outline
-        /*model = glm::scale(glm::mat4(1.0f), glm::vec3(1.1f));  // Scale by 10%
-        ourShader->setUniform("model", model);
-        ourShader->setUniform("color", {1.0f, 0.0f, 0.0f});  // Set outline color
-        // Set outline color (red)
-        ourShader->setUniform("outlineColor", glm::vec3(0.0f, 0.0f, 0.0f));  // Red
-        // Set outline thickness (scale factor)
-        ourShader->setUniform("outlineThickness", 0.1f);  // Thicker outline
-*/
-
         // Set uniform values
-        ourShader->setVec3("color", glm::vec3(1.0f, 0.0f, 0.0f)); // Red color  
+        ourShader->setVec3("color", glm::vec3(1.0f, 1.0f, 1.0f)); // Red color  
         ourShader->setVec3("outlineColor", glm::vec3(0.0f, 0.0f, 0.0f)); // Black outline color  
-        ourShader->setFloat("outlineThickness", 0.05f);
+        ourShader->setFloat("outlineThickness", 0.04f);
+        ourShader->setFloat("outlineOften", 0.5f);
 
-        genRectangleEBO(block, {0, 0, 0});
-        genRectangleEBO(block, {5, -1, 0});
+
+
+ 
+        for (int i = 0; i < cubeObjectList.size(); i++) {
+          genRectangleEBO(block, cubeObjectList[i].location, cubeObjectList[i].scaleAmount);
+        }
         
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -295,10 +300,26 @@ void init(){
     keySwitches["F11"] = 0;keySwitches["ESCAPE"] = 0;keySwitches["M"] = 1;
     keyHeld["F11"] = false;keyHeld["ESCAPE"] = false;keyHeld["M"] = false;
 }
+
+bool checkCollision(const Cube& cubeA, const Cube& cubeB) {
+    // Check overlap in x, y, and z axes
+    bool overlapX = (cubeA.location[0] + cubeA.scaleAmount[0] > cubeB.location[0] - cubeB.scaleAmount[0]) &&
+                    (cubeA.location[0] - cubeA.scaleAmount[0] < cubeB.location[0] + cubeB.scaleAmount[0]);
+    bool overlapY = (cubeA.location[1] + cubeA.scaleAmount[1] > cubeB.location[1] - cubeB.scaleAmount[1]) &&
+                    (cubeA.location[1] - cubeA.scaleAmount[1] < cubeB.location[1] + cubeB.scaleAmount[1]);
+    bool overlapZ = (cubeA.location[2] + cubeA.scaleAmount[2] > cubeB.location[2] - cubeB.scaleAmount[2]) &&
+                    (cubeA.location[2] - cubeA.scaleAmount[2] < cubeB.location[2] + cubeB.scaleAmount[2]);
+
+    // Return true if there is overlap in all three axes
+    return overlapX && overlapY && overlapZ;
+}
+
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
+
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, false);
 
@@ -308,6 +329,8 @@ void processInput(GLFWwindow *window)
 
     float cameraSpeed = 12.5f * deltaTime * globalSpeedMultiplier;
     float verticalSpeed = 15.0f * deltaTime * globalSpeedMultiplier;
+
+    Cube playerBox({static_cast<int>(cameraPos.x), static_cast<int>(cameraPos.y - verticalSpeed), static_cast<int>(cameraPos.z)}, {1, 1, 1});
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
       cameraPos += glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -316,9 +339,8 @@ void processInput(GLFWwindow *window)
       cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
       cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-      cameraPos -= glm::vec3(0.0f, verticalSpeed, 0.0f);
+      if (!checkCollision(cubeObjectList[2], playerBox)) cameraPos -= glm::vec3(0.0f, verticalSpeed, 0.0f);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
       cameraPos += glm::vec3(0.0f, verticalSpeed, 0.0f);
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
@@ -406,11 +428,12 @@ if (fov > 100.0f)
 
 
 
-void genRectangleEBO(const std::array<float, 120> vertices, const std::array<int, 3> location) {
+void genRectangleEBO(const std::array<float, 120> vertices, const std::array<int, 3> location, const std::array<int, 3> scaleAmmount) {
 
   glm::mat4 model = glm::mat4(1.0f);
   glm::vec3 translation(location[0], location[1], location[2]);
   model = glm::translate(model, translation);
+  model = glm::scale(model, glm::vec3(scaleAmmount[0], scaleAmmount[1], scaleAmmount[2]));
 
   ourShader->setMat4("model", model);
   //glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);

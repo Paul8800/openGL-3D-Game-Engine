@@ -103,37 +103,6 @@ public:
       glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
     }
 
-/*
-    // Set uniform functions for different data types
-    void setUniform(const std::string& name, const glm::mat4& mat) {
-        GLint location = glGetUniformLocation(ID, name.c_str());
-        if (location != -1) {
-            glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
-        }
-    }
-
-    void setUniform(const std::string& name, const glm::vec3& vec) {
-        GLint location = glGetUniformLocation(ID, name.c_str());
-        if (location != -1) {
-            glUniform3fv(location, 1, &vec[0]);
-        }
-    }
-
-    void setUniform(const std::string& name, const glm::vec4& vec) {
-        GLint location = glGetUniformLocation(ID, name.c_str());
-        if (location != -1) {
-            glUniform4fv(location, 1, &vec[0]);
-        }
-    }
-
-    void setUniform(const std::string& name, float value) {
-        GLint location = glGetUniformLocation(ID, name.c_str());
-        if (location != -1) {
-            glUniform1f(location, value);
-        }
-    }*/
-
-
 
 private:
     // utility function for checking shader compilation/linking errors.

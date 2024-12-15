@@ -22,23 +22,19 @@
 #include <atomic>
 
 struct Cube {
-    //std::array<int, 3> location; // Center of the cube
-    //std::array<int, 3> scaleAmount; // Side length of the cube
-  glm::vec3 location;
-  glm::vec3 scaleAmount;
+    std::array<float, 3> location; // Center of the cube
+    std::array<float, 3> scaleAmount; // Side length of the cube
 
-    Cube(const glm::vec3& loc, const glm::vec3& scale)
+     //Constructor to initialize location and scaleAmount
+    Cube(const std::array<float, 3>& loc, const std::array<float, 3>& scale)
         : location(loc), scaleAmount(scale) {}
-
-    // Constructor to initialize location and scaleAmount
-    //Cube(const std::array<int, 3>& loc, const std::array<int, 3>& scale)
-        //: location(loc), scaleAmount(scale) {}
 };
 
 std::vector<struct Cube> cubeObjectList;
+void playerMove(glm::vec3 movement);
 
 std::array<float, 120> makeRectangleEBO(const std::array<float, 3> location, const std::array<float, 3> dimensions);
-void genRectangleEBO(const std::array<float, 120> vertices, const std::array<int, 3> location, const std::array<int, 3> scaleAmmount = {1, 1, 1});
+void genRectangleEBO(const std::array<float, 120> vertices, const std::array<float, 3> location, const std::array<float, 3> scaleAmmount = {1, 1, 1});
 bool checkCollision(const Cube& cubeA, const Cube& cubeB);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -159,7 +155,7 @@ int main()
     //world* world = new world({100, 100}, {-100, -100});
 
 
-    std::array<float, 120> block = makeRectangleEBO({0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
+    std::array<float, 120> block = makeRectangleEBO({-1.0f, 1.0f, 1.0f}, {2.0f, 2.0f, 2.0f});
     glBufferData(GL_ARRAY_BUFFER, block.size() * sizeof(float), block.data(), GL_STATIC_DRAW);
 
     unsigned int indices[] = {
@@ -206,9 +202,9 @@ int main()
 
 
        
-  cubeObjectList.push_back({ Cube({0, 7, 0}, {1, 7, 3}) });
+  cubeObjectList.push_back({ Cube({0, 7, 0}, {1, 7, 1}) });
   cubeObjectList.push_back({ Cube({5, 1, 0}, {1, 1, 1}) });
-  cubeObjectList.push_back({ Cube({-25, 0, 25}, {50, 5, 50}) });
+  cubeObjectList.push_back({ Cube({0, 0, 0}, {50, 5, 50}) });
 
 
 
@@ -319,12 +315,28 @@ bool checkCollision(const Cube& cubeA, const Cube& cubeB) {
     return overlapX && overlapY && overlapZ;
 }
 
+void playerMove(glm::vec3 movement) {
+  Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
+
+  playerBox.location[0] += movement.z;
+  if (checkCollision(cubeObjectList[0], playerBox)) movement.x = 0;
+  playerBox.location[0] -= movement.z;
+
+  playerBox.location[1] += movement.y;
+  if (checkCollision(cubeObjectList[0], playerBox)) movement.y = 0;
+  playerBox.location[1] -= movement.y;
+
+  playerBox.location[2] += movement.z;
+  if (checkCollision(cubeObjectList[0], playerBox)) movement.z = 0;
+  playerBox.location[2] -= movement.z;
+
+  cameraPos += movement;
+}
+
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-
-
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, false);
 
@@ -338,20 +350,25 @@ void processInput(GLFWwindow *window)
     Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-      playerBox.location += glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;
-      if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos += glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;}
+      //playerBox.location += (cameraFront.x, 0.0f,cameraFront.z) * cameraSpeed;
+      //if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos += glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;}
+      playerMove(glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed);}
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-      playerBox.location -= glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;
-      if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos -= glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;}
+      //playerBox.location -= glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;
+      //if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos -= glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;}
+      playerMove(-glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed);}
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-      playerBox.location -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-      if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;}
+      //playerBox.location -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+      //if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;}
+      playerMove(-glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed);}
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-      playerBox.location += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-      if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;}
+      //playerBox.location += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+      //if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;}
+      playerMove(glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed);}
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
       //playerBox.location[1] -= verticalSpeed;
-      if (!checkCollision(cubeObjectList[2], playerBox)) cameraPos -= glm::vec3(0.0f, verticalSpeed, 0.0f);
+      //if (!checkCollision(cubeObjectList[2], playerBox)) cameraPos -= glm::vec3(0.0f, verticalSpeed, 0.0f);
+      playerMove(-glm::vec3(0.0f, verticalSpeed, 0.0f));
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
       cameraPos += glm::vec3(0.0f, verticalSpeed, 0.0f);
@@ -440,10 +457,10 @@ if (fov > 100.0f)
 
 
 
-void genRectangleEBO(const std::array<float, 120> vertices, const std::array<int, 3> location, const std::array<int, 3> scaleAmmount) {
+void genRectangleEBO(const std::array<float, 120> vertices, const std::array<float, 3> location, const std::array<float, 3> scaleAmmount) {
 
   glm::mat4 model = glm::mat4(1.0f);
-  glm::vec3 translation(location[0], location[1], location[2]);
+  glm::vec3 translation(location[0], location[1], location[2]+3);
   model = glm::translate(model, translation);
   model = glm::scale(model, glm::vec3(scaleAmmount[0], scaleAmmount[1], scaleAmmount[2]));
 

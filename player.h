@@ -15,6 +15,9 @@ class player
 {
 public:
     unsigned int ID;
+
+    float location;
+
     string username;
     float health = 100;
 
@@ -22,35 +25,11 @@ public:
     
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
-    player(const char* vertexPath, const char* fragmentPath) {
+    player() {
     }
     // activate the shader
     // ------------------------------------------------------------------------
-    void newPlayer(string username)
-    void use() 
-    { 
-        glUseProgram(ID); 
-    
-    // utility uniform functions
-    // ------------------------------------------------------------------------
-    void setBool(const std::string &name, bool value) const {         
+    void move() { 
+      
     }
-    // ------------------------------------------------------------------------
-    void setInt(const std::string &name, int value) const { 
-    }
-    // ------------------------------------------------------------------------
-    void setFloat(const std::string &name, float value) const { 
-    }
-    // ------------------------------------------------------------------------
-    void setMat4(const std::string &name, const glm::mat4 &value) {
-    }
-
-private:
-    // utility function for checking shader compilation/linking errors.
-    // ------------------------------------------------------------------------
-    void checkCompileErrors(unsigned int shader, std::string type)
-    {
-     
-    }
-};
 #endif

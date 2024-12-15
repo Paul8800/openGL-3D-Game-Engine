@@ -22,12 +22,17 @@
 #include <atomic>
 
 struct Cube {
-    const std::array<int, 3> location; // Center of the cube
-    const std::array<int, 3> scaleAmount; // Side length of the cube
-    
-    // Constructor to initialize location and scaleAmount
-    Cube(const std::array<int, 3>& loc, const std::array<int, 3>& scale)
+    //std::array<int, 3> location; // Center of the cube
+    //std::array<int, 3> scaleAmount; // Side length of the cube
+  glm::vec3 location;
+  glm::vec3 scaleAmount;
+
+    Cube(const glm::vec3& loc, const glm::vec3& scale)
         : location(loc), scaleAmount(scale) {}
+
+    // Constructor to initialize location and scaleAmount
+    //Cube(const std::array<int, 3>& loc, const std::array<int, 3>& scale)
+        //: location(loc), scaleAmount(scale) {}
 };
 
 std::vector<struct Cube> cubeObjectList;
@@ -330,17 +335,24 @@ void processInput(GLFWwindow *window)
     float cameraSpeed = 12.5f * deltaTime * globalSpeedMultiplier;
     float verticalSpeed = 15.0f * deltaTime * globalSpeedMultiplier;
 
-    Cube playerBox({static_cast<int>(cameraPos.x), static_cast<int>(cameraPos.y - verticalSpeed), static_cast<int>(cameraPos.z)}, {1, 1, 1});
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-      cameraPos += glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-      cameraPos -= glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-      cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-      cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+      playerBox.location += glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;
+      if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos += glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;}
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+      playerBox.location -= glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;
+      if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos -= glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;}
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+      playerBox.location -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+      if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;}
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
+      playerBox.location += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+      if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;}
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+      //playerBox.location[1] -= verticalSpeed;
       if (!checkCollision(cubeObjectList[2], playerBox)) cameraPos -= glm::vec3(0.0f, verticalSpeed, 0.0f);
+    }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
       cameraPos += glm::vec3(0.0f, verticalSpeed, 0.0f);
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)

@@ -76,6 +76,8 @@ float lastX =  800.0f / 2.0;
 float lastY =  600.0 / 2.0;
 float fov   =  90.0f;
 
+float playerVelocityY = 0.0f;
+
 int main()
 {
     init();
@@ -202,9 +204,9 @@ int main()
 
 
        
-  cubeObjectList.push_back({ Cube({0, 7, 0}, {1, 7, 1}) });
-  cubeObjectList.push_back({ Cube({5, 1, 0}, {1, 1, 1}) });
-  cubeObjectList.push_back({ Cube({0, 0, 0}, {50, 5, 50}) });
+  cubeObjectList.push_back({ Cube({10, 5, 10}, {5, 7, 5}) });
+  cubeObjectList.push_back({ Cube({5, -2, 10}, {1, 1, 1}) });
+  cubeObjectList.push_back({ Cube({0, -8, 0}, {500, 5, 500}) });
 
 
 
@@ -306,8 +308,10 @@ bool checkCollision(const Cube& cubeA, const Cube& cubeB) {
     // Check overlap in x, y, and z axes
     bool overlapX = (cubeA.location[0] + cubeA.scaleAmount[0] > cubeB.location[0] - cubeB.scaleAmount[0]) &&
                     (cubeA.location[0] - cubeA.scaleAmount[0] < cubeB.location[0] + cubeB.scaleAmount[0]);
+
     bool overlapY = (cubeA.location[1] + cubeA.scaleAmount[1] > cubeB.location[1] - cubeB.scaleAmount[1]) &&
                     (cubeA.location[1] - cubeA.scaleAmount[1] < cubeB.location[1] + cubeB.scaleAmount[1]);
+
     bool overlapZ = (cubeA.location[2] + cubeA.scaleAmount[2] > cubeB.location[2] - cubeB.scaleAmount[2]) &&
                     (cubeA.location[2] - cubeA.scaleAmount[2] < cubeB.location[2] + cubeB.scaleAmount[2]);
 
@@ -316,19 +320,26 @@ bool checkCollision(const Cube& cubeA, const Cube& cubeB) {
 }
 
 void playerMove(glm::vec3 movement) {
+
   Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
 
-  playerBox.location[0] += movement.z;
-  if (checkCollision(cubeObjectList[0], playerBox)) movement.x = 0;
-  playerBox.location[0] -= movement.z;
+  const glm::vec3 ogMovement = movement;
+  
+  
+  playerBox.location[0] += movement.x; //apply movement to player
+  for (int i = 0; i < cubeObjectList.size(); i++) { // loop for each collision object
+    if (checkCollision(cubeObjectList[i], playerBox)) { movement.x = 0; break; }} //test if movement leads to any colision, if so, block the movement
+  playerBox.location[0] -= ogMovement.x; // remove the movement to test other axis
 
   playerBox.location[1] += movement.y;
-  if (checkCollision(cubeObjectList[0], playerBox)) movement.y = 0;
-  playerBox.location[1] -= movement.y;
+  for (int i = 0; i < cubeObjectList.size(); i++) {
+    if (checkCollision(cubeObjectList[i], playerBox)) { movement.y = 0; break; }}
+  playerBox.location[1] -= ogMovement.y;
 
   playerBox.location[2] += movement.z;
-  if (checkCollision(cubeObjectList[0], playerBox)) movement.z = 0;
-  playerBox.location[2] -= movement.z;
+  for (int i = 0; i < cubeObjectList.size(); i++) {
+    if (checkCollision(cubeObjectList[i], playerBox)) { movement.z = 0; break; }}
+  playerBox.location[2] -= ogMovement.z;
 
   cameraPos += movement;
 }
@@ -347,7 +358,26 @@ void processInput(GLFWwindow *window)
     float cameraSpeed = 12.5f * deltaTime * globalSpeedMultiplier;
     float verticalSpeed = 15.0f * deltaTime * globalSpeedMultiplier;
 
+    float gravity = -9.81f/10;
+    float jumpHeight = 10.0f/10;
+
+
     Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
+    bool isOnGround = false;
+    playerBox.location[1] += -verticalSpeed * deltaTime*50; //apply movement to player
+    if (checkCollision(cubeObjectList[0], playerBox) || checkCollision(cubeObjectList[1], playerBox) || checkCollision(cubeObjectList[2], playerBox)) {
+      isOnGround = true;
+      playerVelocityY = 0;
+    } else {
+      isOnGround = false;
+      playerMove(glm::vec3(0.0f, playerVelocityY, 0.0f));
+      playerMove(glm::vec3(0.0f, -verticalSpeed, 0.0f));
+      playerVelocityY += gravity *deltaTime;
+    }
+    playerBox.location[1] += verticalSpeed * deltaTime*50; //apply movement to player
+    
+
+      
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
       //playerBox.location += (cameraFront.x, 0.0f,cameraFront.z) * cameraSpeed;
@@ -370,8 +400,10 @@ void processInput(GLFWwindow *window)
       //if (!checkCollision(cubeObjectList[2], playerBox)) cameraPos -= glm::vec3(0.0f, verticalSpeed, 0.0f);
       playerMove(-glm::vec3(0.0f, verticalSpeed, 0.0f));
     }
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+      if (isOnGround) playerVelocityY = jumpHeight;
       cameraPos += glm::vec3(0.0f, verticalSpeed, 0.0f);
+    }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
       std::cout << std::round(cameraPos[0]) << ", " << std::round(cameraPos[1]) << ", " << std::round(cameraPos[2]) << std::endl;
 

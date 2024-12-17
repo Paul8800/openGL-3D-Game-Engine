@@ -204,8 +204,8 @@ int main()
 
 
        
-  cubeObjectList.push_back({ Cube({10, 5, 10}, {5, 7, 5}) });
-  cubeObjectList.push_back({ Cube({5, -2, 10}, {1, 1, 1}) });
+  cubeObjectList.push_back({ Cube({10, 4, 10}, {5, 7, 5}) });
+  cubeObjectList.push_back({ Cube({15, -2, 20}, {1, 1, 1}) });
   cubeObjectList.push_back({ Cube({0, -8, 0}, {500, 5, 500}) });
 
 

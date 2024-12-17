@@ -9,6 +9,7 @@
 #include "include/stb_image.h"
 
 #include "Shader.h"
+#include "model.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -31,7 +32,7 @@ struct Cube {
 };
 
 std::vector<struct Cube> cubeObjectList;
-void playerMove(glm::vec3 movement);
+bool playerMove(glm::vec3 movement);
 
 std::array<float, 120> makeRectangleEBO(const std::array<float, 3> location, const std::array<float, 3> dimensions);
 void genRectangleEBO(const std::array<float, 120> vertices, const std::array<float, 3> location, const std::array<float, 3> scaleAmmount = {1, 1, 1});
@@ -124,12 +125,15 @@ int main()
     //Shader ourShader("shaders/shader.vs", "shaders/shader.fs");
     ourShader = new Shader("shaders/shader.vs", "shaders/shader.fs");
 
+    //Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
+    Model ourModel(FileSystem::getPath("blender/map1.blend"));
+
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
 
     unsigned int VAO, VBO, EBO; //Vertex buffer object; Vertex array object, elemnt buffer object
     glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    glGenBuffers(2, &VBO);
     glGenBuffers(1, &EBO);
     // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
     glBindVertexArray(VAO);
@@ -263,6 +267,7 @@ int main()
 
         // render the meshes
         ourShader->use(); //shader for white shapes with black outline
+
         glBindVertexArray(VAO);
 
         
@@ -319,7 +324,7 @@ bool checkCollision(const Cube& cubeA, const Cube& cubeB) {
     return overlapX && overlapY && overlapZ;
 }
 
-void playerMove(glm::vec3 movement) {
+bool playerMove(glm::vec3 movement) {
 
   Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
 
@@ -342,6 +347,9 @@ void playerMove(glm::vec3 movement) {
   playerBox.location[2] -= ogMovement.z;
 
   cameraPos += movement;
+  if (movement.x != ogMovement.x || movement.y != ogMovement.y || movement.z != ogMovement.z) return true;
+  
+  return false;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
@@ -358,26 +366,24 @@ void processInput(GLFWwindow *window)
     float cameraSpeed = 12.5f * deltaTime * globalSpeedMultiplier;
     float verticalSpeed = 15.0f * deltaTime * globalSpeedMultiplier;
 
-    float gravity = -9.81f/10;
-    float jumpHeight = 10.0f/10;
+    float gravity = -9.81f/20;
+    float jumpHeight = 10.0f/40;
 
 
     Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
     bool isOnGround = false;
-    playerBox.location[1] += -verticalSpeed * deltaTime*50; //apply movement to player
+    playerBox.location[1] += -verticalSpeed * deltaTime; //apply movement to player
     if (checkCollision(cubeObjectList[0], playerBox) || checkCollision(cubeObjectList[1], playerBox) || checkCollision(cubeObjectList[2], playerBox)) {
-      isOnGround = true;
       playerVelocityY = 0;
     } else {
       isOnGround = false;
-      playerMove(glm::vec3(0.0f, playerVelocityY, 0.0f));
-      playerMove(glm::vec3(0.0f, -verticalSpeed, 0.0f));
+      if (playerMove(glm::vec3(0.0f, playerVelocityY, 0.0f))) isOnGround = true;
       playerVelocityY += gravity *deltaTime;
     }
     playerBox.location[1] += verticalSpeed * deltaTime*50; //apply movement to player
     
-
-      
+    
+    
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
       //playerBox.location += (cameraFront.x, 0.0f,cameraFront.z) * cameraSpeed;
@@ -402,7 +408,7 @@ void processInput(GLFWwindow *window)
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
       if (isOnGround) playerVelocityY = jumpHeight;
-      cameraPos += glm::vec3(0.0f, verticalSpeed, 0.0f);
+      //cameraPos += glm::vec3(0.0f, verticalSpeed, 0.0f);
     }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
       std::cout << std::round(cameraPos[0]) << ", " << std::round(cameraPos[1]) << ", " << std::round(cameraPos[2]) << std::endl;

@@ -1,9 +1,10 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include <glad/glad.h>
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
+#include "include/glad/glad.h"
+#include "include/glm/glm.hpp"
+#include "include/glm/gtc/matrix_transform.hpp"
+
 
 #include "Shader.h"
 
@@ -21,6 +22,7 @@ struct Vertex {
 struct Texture {
   unsigned int id;
   string type;
+  string path;
 };
 
 class Mesh {

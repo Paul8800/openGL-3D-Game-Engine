@@ -7,6 +7,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
+#include "include/filesystem.h"
 
 #include "Shader.h"
 #include "model.h"

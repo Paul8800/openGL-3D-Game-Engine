@@ -12,15 +12,11 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
 
 class Model {
 public:
-
-  //Assimp::Importer importer;
-  //const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
-  
   vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
   bool gammaCorrection;
 
 
-  Model(char *path) {
+  Model(const char *path) {
     loadModel(path);
   }
 

@@ -1,4 +1,4 @@
-//RC: g++ -g -o /home/paul/NeoVimProjects/temp/temp app.cpp glad/glad.c -I./glad -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl
+//RC: g++ -g -o /home/paul/NeoVimProjects/temp/temp app.cpp glad/glad.c -I./glad -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp
 #include "include/glad/glad.h"
 #include <GLFW/glfw3.h>
 #include "include/glm/glm.hpp"
@@ -7,7 +7,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
-#include "include/filesystem.h"
+//#include "include/filesystem.h"
 
 #include "Shader.h"
 #include "model.h"
@@ -127,7 +127,9 @@ int main()
     ourShader = new Shader("shaders/shader.vs", "shaders/shader.fs");
 
     //Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
-    Model ourModel(FileSystem::getPath("blender/map1.blend"));
+    Model ourModel("/home/paul/NeoVimProjects/tacticalShooter/blender/map1.obj");//FileSystem::getPath("blender/map1.blend"));
+    //Model ourModel("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj");//FileSystem::getPath("blender/map1.blend"));
+    //Model ourModel("FileSystem::getPath("blender/map1.blend"));
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -209,9 +211,9 @@ int main()
 
 
        
-  cubeObjectList.push_back({ Cube({10, 4, 10}, {5, 7, 5}) });
-  cubeObjectList.push_back({ Cube({15, -2, 20}, {1, 1, 1}) });
-  cubeObjectList.push_back({ Cube({0, -8, 0}, {500, 5, 500}) });
+  cubeObjectList.push_back({ Cube({-30, 4, 10}, {5, 7, 5}) });
+  cubeObjectList.push_back({ Cube({-45, -2, 20}, {1, 1, 1}) });
+  //cubeObjectList.push_back({ Cube({0, -8, 0}, {500, 5, 500}) });
 
 
 
@@ -273,7 +275,7 @@ int main()
 
         
         // Set uniform values
-        ourShader->setVec3("color", glm::vec3(1.0f, 1.0f, 1.0f)); // Red color  
+        ourShader->setVec3("color", glm::vec3(1.0f, 1.0f, 0.0f)); // Red color  
         ourShader->setVec3("outlineColor", glm::vec3(0.0f, 0.0f, 0.0f)); // Black outline color  
         ourShader->setFloat("outlineThickness", 0.04f);
         ourShader->setFloat("outlineOften", 0.5f);
@@ -284,6 +286,15 @@ int main()
         for (int i = 0; i < cubeObjectList.size(); i++) {
           genRectangleEBO(block, cubeObjectList[i].location, cubeObjectList[i].scaleAmount);
         }
+
+        model = glm::mat4(1.0f);
+        glm::vec3 translation(0, -5, 0);
+        model = glm::translate(model, translation);
+        model = glm::scale(model, glm::vec3(1, 1, 1));
+
+        ourShader->setMat4("model", model);
+
+        ourModel.Draw(*ourShader);
         
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -306,7 +317,7 @@ int main()
 
 // Function to create the world
 void init(){
-    keySwitches["F11"] = 0;keySwitches["ESCAPE"] = 0;keySwitches["M"] = 1;
+    keySwitches["F11"] = 0;keySwitches["ESCAPE"] = 0;keySwitches["M"] = 2;
     keyHeld["F11"] = false;keyHeld["ESCAPE"] = false;keyHeld["M"] = false;
 }
 
@@ -371,17 +382,19 @@ void processInput(GLFWwindow *window)
     float jumpHeight = 10.0f/40;
 
 
-    Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
     bool isOnGround = false;
-    playerBox.location[1] += -verticalSpeed * deltaTime; //apply movement to player
-    if (checkCollision(cubeObjectList[0], playerBox) || checkCollision(cubeObjectList[1], playerBox) || checkCollision(cubeObjectList[2], playerBox)) {
-      playerVelocityY = 0;
-    } else {
-      isOnGround = false;
-      if (playerMove(glm::vec3(0.0f, playerVelocityY, 0.0f))) isOnGround = true;
-      playerVelocityY += gravity *deltaTime;
+    if (keySwitches["M"] == 1) {
+      Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
+      playerBox.location[1] += -verticalSpeed * deltaTime; //apply movement to player
+      if (checkCollision(cubeObjectList[0], playerBox) || checkCollision(cubeObjectList[1], playerBox) || checkCollision(cubeObjectList[2], playerBox)) {
+        playerVelocityY = 0;
+      } else {
+        isOnGround = false;
+        if (playerMove(glm::vec3(0.0f, playerVelocityY, 0.0f))) isOnGround = true;
+        playerVelocityY += gravity *deltaTime;
+      }
+      playerBox.location[1] += verticalSpeed * deltaTime*50; //apply movement to player
     }
-    playerBox.location[1] += verticalSpeed * deltaTime*50; //apply movement to player
     
     
     
@@ -408,8 +421,8 @@ void processInput(GLFWwindow *window)
       playerMove(-glm::vec3(0.0f, verticalSpeed, 0.0f));
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-      if (isOnGround) playerVelocityY = jumpHeight;
-      //cameraPos += glm::vec3(0.0f, verticalSpeed, 0.0f);
+      if (isOnGround && keySwitches["M"] == 1) playerVelocityY = jumpHeight;
+      if (keySwitches["M"]!= 1) cameraPos += glm::vec3(0.0f, verticalSpeed, 0.0f);
     }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
       std::cout << std::round(cameraPos[0]) << ", " << std::round(cameraPos[1]) << ", " << std::round(cameraPos[2]) << std::endl;

@@ -17,13 +17,13 @@ using namespace std;
 class Collision {
   public:
 
-    bool checkCollision(Model modelA, Model modelB, int precisionLvl) {
+    bool checkCollision(Model& modelA, Model& modelB, int precisionLvl) {
       //Checks collision between 2 model.h objects
       //
-      //precisionLvl - 0 means weakest, 3 means greatest, anything ouside 0-3 does greatest
+  //precisionLvl - 0 means weakest, 3 means greatest, anything ouside 0-3 does greatest
       
-      vector<Mesh> meshesA = modelA.meshes;
-      vector<Mesh> meshesB = modelB.meshes;
+      vector<Mesh>& meshesA = modelA.meshes;
+      vector<Mesh>& meshesB = modelB.meshes;
 
       for (int a = 0; a < meshesA.size(); a++) {
         for (int b = 0; b < meshesB.size(); b++) {
@@ -52,56 +52,42 @@ class Collision {
    
 
   private:
-    bool sphere(Mesh ObjA, Mesh ObjB) {
+    void initSphereBB(Mesh& Obj) {
+      std::cout << "ran init of BB" << std::endl;
+      glm::vec3 center(0.0f);
+      float radius = 0.0f;
 
-    glm::vec3 centerA(0.0f), centerB(0.0f);
-    float radiusA = 0.0f, radiusB = 0.0f;
+      //Step 1: Compute the center of the sphere (average of all vertices)
+      for (const auto& vertex : Obj.vertices) {
+          center += vertex.Position;
+      }
+      center /= static_cast<float>(Obj.vertices.size());
 
-    //Step 1: Compute the center of the sphere (average of all vertices)
-    for (const auto& vertex : ObjA.vertices) {
-        centerA += vertex.Position;
-    }
-    centerA /= static_cast<float>(ObjA.vertices.size());
+      // Step 2: Compute the radius of the sphere (max distance from center)
+      for (const auto& vertex : Obj.vertices) {
+          float distance = glm::length(vertex.Position - center);
+          if (distance > radius) {
+              radius = distance;
+          }
+      }
 
-    for (const auto& vertex : ObjB.vertices) {
-      //std::cout << vertex.transformedPos.x << ", " << vertex.transformedPos.y << ", " << vertex.transformedPos.z << std::endl;
-        centerB += vertex.Position;
-    }
-    centerB /= static_cast<float>(ObjB.vertices.size());
-
-    // Step 2: Compute the radius of the sphere (max distance from center)
-    for (const auto& vertex : ObjA.vertices) {
-        float distance = glm::length(vertex.Position - centerA);
-        if (distance > radiusA) {
-            radiusA = distance;
-        }
+      Obj.center = center;
+      Obj.radius = radius;
     }
 
-    for (const auto& vertex : ObjB.vertices) {
-        float distance = glm::length(vertex.Position - centerB);
-        if (distance > radiusB) {
-            radiusB = distance;
-        }
-    }
+    bool sphere(Mesh& ObjA, Mesh& ObjB) {
 
-    //centerA = glm::vec3(ObjA.modelTrans * glm::vec4(centerA, 1.0f));
-    centerB = glm::vec3(ObjB.modelTrans * glm::vec4(centerB, 1.0f));
+    if (ObjA.radius == -1.0f) initSphereBB(ObjA);
+    if (ObjB.radius == -1.0f) initSphereBB(ObjB);
+
+    //glm::vec3 centerA = glm::vec3(ObjA.modelTrans * glm::vec4(ObjA.center, 1.0f));
+    glm::vec3 centerA = ObjA.center;
+    glm::vec3 centerB = glm::vec3(ObjB.modelTrans * glm::vec4(ObjB.center, 1.0f));
 
     float distance = glm::length(centerA - centerB);
     
-    /*
-    std::cout << "Center A: " << centerA.x << ", " << centerA.y << ", " << centerA.z << std::endl;
-    std::cout << "Radius A: " << radiusA << std::endl;
 
-    std::cout << "Center B: " << centerB.x << ", " << centerB.y << ", " << centerB.z << std::endl;
-    std::cout << "Radius B: " << radiusB << std::endl;
-
-    std::cout << "Distance: " << distance << std::endl;
-    std::cout << "Sum of Radii: " << radiusA + radiusB << std::endl;
-    */
-    
-
-    return distance <= (radiusA + radiusB);
+    return distance <= (ObjA.radius + ObjB.radius);
     }
 
     bool AABB(Mesh model, Mesh model2) {

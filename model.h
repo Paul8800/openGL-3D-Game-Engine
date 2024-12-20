@@ -84,7 +84,6 @@ private:
           vector.y = mesh->mVertices[i].y;
           vector.z = mesh->mVertices[i].z;
           vertex.Position = vector;
-          vertex.transformedPos = glm::vec3(modelTrans * glm::vec4(vector, 1.0f));
 
           // normals
           if (mesh->HasNormals())

@@ -17,8 +17,6 @@ struct Vertex {
   glm::vec3 Position;
   glm::vec3 Normal;
   glm::vec2 TexCoords;
-
-  glm::vec3 transformedPos;
 };
 
 struct Texture {
@@ -35,6 +33,11 @@ class Mesh {
     vector<Texture>      textures;
 
     glm::mat4 modelTrans;
+
+    //BB saves
+    glm::vec3 center;
+    float radius = -1.0f;
+
 
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures) {
       this->vertices = vertices;

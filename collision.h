@@ -31,7 +31,6 @@ class Collision {
           if (meshesA[a].vertices.empty() || meshesB[b].vertices.empty()) break;
 
           if (sphere(meshesA[a], meshesB[b])) {
-              return true;
             if (precisionLvl == 0) return true;
             if (AABB(meshesA[a], meshesB[b])) {
               if (precisionLvl == 1) return true;
@@ -90,15 +89,68 @@ class Collision {
     return distance <= (ObjA.radius + ObjB.radius);
     }
 
-    bool AABB(Mesh model, Mesh model2) {
+
+    void initAABB(Mesh& obj) {
+
+      // Step 1: Compute for the lowest and highest x values to determine length
+      float lengthMin = obj.vertices[0].Position.x;
+      float lengthMax = obj.vertices[0].Position.x;
+      for (const auto& vertex : obj.vertices) {
+          if (lengthMin > vertex.Position.x) lengthMin = vertex.Position.x;
+          if (lengthMax < vertex.Position.x) lengthMax = vertex.Position.x;
+      }
+      obj.length = (lengthMax - lengthMin);
+
+      float heightMin = obj.vertices[0].Position.y;
+      float heightMax = obj.vertices[0].Position.y;
+      for (const auto& vertex : obj.vertices) {
+          if (heightMin > vertex.Position.y) heightMin = vertex.Position.y;
+          if (heightMax < vertex.Position.y) heightMax = vertex.Position.y;
+      }
+      obj.height = (heightMax - heightMin);
+
+
+      float widthMin = obj.vertices[0].Position.z;
+      float widthMax = obj.vertices[0].Position.z;
+      for (const auto& vertex : obj.vertices) {
+          if (widthMin > vertex.Position.z) widthMin = vertex.Position.z;
+          if (widthMax < vertex.Position.z) widthMax = vertex.Position.z;
+      }
+      obj.width = (widthMax - widthMin);
+
+    }
+
+    bool AABB(Mesh& objA, Mesh& objB) {
+
+      if (objA.length == -1.0f) initAABB(objA);
+      if (objB.length == -1.0f) initAABB(objB);
+
+      glm::vec3 centerA = objA.center;
+      glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
+      //glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
+
+      std::cout << "ObjA: " << objA.length << ",  " << objA.height << ",  " << objA.width << ",  : " << objA.center.y << std::endl; 
+      std::cout << "ObjB  " << objB.length << ",  " << objB.height << ",  " << objB.width << ",  : " << objB.center.y << std::endl; 
+
+      bool overlapX = (centerA.x + objA.length/2 > centerB.x - objB.length/2) &&
+                      (centerA.x - objA.length/2 < centerB.x + objB.length/2);
+
+      bool overlapY = (centerA.y + objA.height/2 > centerB.y - objB.height/2) &&
+                      (centerA.y - objA.height/2 < centerB.y + objB.height/2);
+
+      bool overlapZ = (centerA.z + objA.width/2 > centerB.z - objB.width/2) &&
+                      (centerA.z - objA.width/2 < centerB.z + objB.width/2);
+
+    // Return true if there is overlap in all three axes
+    return overlapX && overlapY && overlapZ;
+
+    }
+
+    bool OBB(Mesh& objA, Mesh& objB) {
       return true;
     }
 
-    bool OBB(Mesh model, Mesh model2) {
-      return true;
-    }
-
-    bool convexHull(Mesh model, Mesh model2) {
+    bool convexHull(Mesh& objA, Mesh& objB) {
       return true;
     }
 

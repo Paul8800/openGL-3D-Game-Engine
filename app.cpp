@@ -366,17 +366,20 @@ bool playerMove(glm::vec3 movement) {
   //
   Collision clsn;
   
-  playerBox.location[0] += movement.x;
-  if (clsn.checkCollision(modelsList[0], *playerModel, 0)) { movement.x = 0;}
-  playerBox.location[0] -= ogMovement.x;
+  cameraPos.x += ogMovement.x;
+  playerModel->updateTransformations(cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
+  if (clsn.checkCollision(modelsList[0], *playerModel, 1)) { movement.x = 0;}
+  cameraPos.x -= ogMovement.x;
 
-  playerBox.location[1] += movement.y;
-  if (clsn.checkCollision(modelsList[0], *playerModel, 0)) { movement.y = 0;}
-  playerBox.location[1] -= ogMovement.y;
+  cameraPos.y += ogMovement.y;
+  playerModel->updateTransformations(cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
+  if (clsn.checkCollision(modelsList[0], *playerModel, 1)) { movement.y = 0;}
+  cameraPos.y -= ogMovement.y;
 
-  playerBox.location[2] += movement.z;
-  if (clsn.checkCollision(modelsList[0], *playerModel, 0)) { movement.z = 0;}
-  playerBox.location[2] -= ogMovement.z;
+  cameraPos.z += ogMovement.z;
+  playerModel->updateTransformations(cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
+  if (clsn.checkCollision(modelsList[0], *playerModel, 1)) { movement.z = 0;}
+  cameraPos.z -= ogMovement.z;
 
 
   //   ##################################################

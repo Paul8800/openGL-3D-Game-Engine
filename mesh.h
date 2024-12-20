@@ -38,6 +38,10 @@ class Mesh {
     glm::vec3 center;
     float radius = -1.0f;
 
+    float length = -1.0f;
+    float width = -1.0f;
+    float height = -1.0f;
+
 
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures) {
       this->vertices = vertices;

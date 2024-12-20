@@ -40,6 +40,17 @@ public:
     }
   }
 
+  void updateTransformations(glm::vec3 translation, glm::vec3 scale) {
+    modelTrans = glm::mat4(1.0f);
+    modelTrans = glm::translate(modelTrans, translation);
+    modelTrans = glm::scale(modelTrans, scale);
+
+
+    for(unsigned int i = 0; i < meshes.size(); i++) {
+      meshes[i].updateTransformations(modelTrans);
+    }
+  }
+
 private:
 
 

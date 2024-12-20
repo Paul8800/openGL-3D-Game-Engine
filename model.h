@@ -15,20 +15,33 @@ public:
   vector<Texture> textures_loaded;	// stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
   bool gammaCorrection;
 
+  glm::mat4 modelTrans;
+
+  // model data
+  vector<Mesh> meshes;
+  string directory;
+
 
   Model(const char *path) {
     loadModel(path);
   }
+  
+  void Draw(Shader &shader, glm::vec3 translation, glm::vec3 scale) {
+    
+    modelTrans = glm::mat4(1.0f);
+    modelTrans = glm::translate(modelTrans, translation);
+    modelTrans = glm::scale(modelTrans, scale);
 
-  void Draw(Shader &shader) {
-    for(unsigned int i = 0; i < meshes.size(); i++)
-    meshes[i].Draw(shader);
+    shader.setMat4("model", modelTrans);
+
+    for(unsigned int i = 0; i < meshes.size(); i++) {
+      meshes[i].Draw(shader);
+      meshes[i].updateTransformations(modelTrans);
+    }
   }
 
 private:
-  // model data
-  vector<Mesh> meshes;
-  string directory;
+
 
   void loadModel(string path) {
     Assimp::Importer import;
@@ -60,6 +73,7 @@ private:
       vector<unsigned int> indices;
       vector<Texture> textures;
 
+
       // walk through each of the mesh's vertices
       for(unsigned int i = 0; i < mesh->mNumVertices; i++)
       {
@@ -70,6 +84,8 @@ private:
           vector.y = mesh->mVertices[i].y;
           vector.z = mesh->mVertices[i].z;
           vertex.Position = vector;
+          vertex.transformedPos = glm::vec3(modelTrans * glm::vec4(vector, 1.0f));
+
           // normals
           if (mesh->HasNormals())
           {

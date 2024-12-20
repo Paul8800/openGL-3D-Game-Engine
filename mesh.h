@@ -17,6 +17,8 @@ struct Vertex {
   glm::vec3 Position;
   glm::vec3 Normal;
   glm::vec2 TexCoords;
+
+  glm::vec3 transformedPos;
 };
 
 struct Texture {
@@ -31,6 +33,8 @@ class Mesh {
     vector<Vertex>       vertices;
     vector<unsigned int> indices;
     vector<Texture>      textures;
+
+    glm::mat4 modelTrans;
 
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures) {
       this->vertices = vertices;
@@ -62,6 +66,14 @@ class Mesh {
       glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
       glBindVertexArray(0);
     }
+
+    void updateTransformations(glm::mat4 modelTrans2) {
+      /*for (auto& vertex : vertices) {
+        vertex.transformedPos = glm::vec3(modelTrans * glm::vec4(vertex.Position, 1.0f));
+      }*/
+      modelTrans = modelTrans2;
+    }
+
   private:
     // render data
     unsigned int VAO, VBO, EBO;

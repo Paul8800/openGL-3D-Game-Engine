@@ -11,6 +11,7 @@
 
 #include "Shader.h"
 #include "model.h"
+#include "collision.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -22,6 +23,10 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+
+
+std::vector<Model> modelsList;
+Model* playerModel = nullptr;
 
 struct Cube {
     std::array<float, 3> location; // Center of the cube
@@ -127,9 +132,13 @@ int main()
     ourShader = new Shader("shaders/shader.vs", "shaders/shader.fs");
 
     //Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
-    Model ourModel("/home/paul/NeoVimProjects/tacticalShooter/blender/map1.obj");//FileSystem::getPath("blender/map1.blend"));
+    Model ourModel("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLine.obj");//FileSystem::getPath("blender/map1.blend"));
     //Model ourModel("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj");//FileSystem::getPath("blender/map1.blend"));
     //Model ourModel("FileSystem::getPath("blender/map1.blend"));
+    
+    playerModel = new Model("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj");
+    modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLine.obj"));
+
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -276,8 +285,8 @@ int main()
         
         // Set uniform values
         ourShader->setVec3("color", glm::vec3(1.0f, 1.0f, 0.0f)); // Red color  
-        ourShader->setVec3("outlineColor", glm::vec3(0.0f, 0.0f, 0.0f)); // Black outline color  
-        ourShader->setFloat("outlineThickness", 0.04f);
+        ourShader->setVec3("outlineColor", glm::vec3(1.0f, 0.0f, 0.0f)); // Black outline color  
+        ourShader->setFloat("outlineThickness", 0.00f);
         ourShader->setFloat("outlineOften", 0.5f);
 
 
@@ -286,16 +295,10 @@ int main()
         for (int i = 0; i < cubeObjectList.size(); i++) {
           genRectangleEBO(block, cubeObjectList[i].location, cubeObjectList[i].scaleAmount);
         }
-
-        model = glm::mat4(1.0f);
-        glm::vec3 translation(0, -5, 0);
-        model = glm::translate(model, translation);
-        model = glm::scale(model, glm::vec3(1, 1, 1));
-
-        ourShader->setMat4("model", model);
-
-        ourModel.Draw(*ourShader);
         
+        ourModel.Draw(*ourShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+
+        playerModel->Draw(*ourShader, cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -357,6 +360,28 @@ bool playerMove(glm::vec3 movement) {
   for (int i = 0; i < cubeObjectList.size(); i++) {
     if (checkCollision(cubeObjectList[i], playerBox)) { movement.z = 0; break; }}
   playerBox.location[2] -= ogMovement.z;
+
+  
+  //   Collision.h tests for models and no longer structs
+  //
+  Collision clsn;
+  
+  playerBox.location[0] += movement.x;
+  if (clsn.checkCollision(modelsList[0], *playerModel, 0)) { movement.x = 0;}
+  playerBox.location[0] -= ogMovement.x;
+
+  playerBox.location[1] += movement.y;
+  if (clsn.checkCollision(modelsList[0], *playerModel, 0)) { movement.y = 0;}
+  playerBox.location[1] -= ogMovement.y;
+
+  playerBox.location[2] += movement.z;
+  if (clsn.checkCollision(modelsList[0], *playerModel, 0)) { movement.z = 0;}
+  playerBox.location[2] -= ogMovement.z;
+
+
+  //   ##################################################
+
+
 
   cameraPos += movement;
   if (movement.x != ogMovement.x || movement.y != ogMovement.y || movement.z != ogMovement.z) return true;

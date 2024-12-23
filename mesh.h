@@ -42,6 +42,12 @@ class Mesh {
     float width = -1.0f;
     float height = -1.0f;
 
+    glm::vec3 halfExtents = glm::vec3(-1.0f, -1.0f, -1.0f);
+    glm::vec3 axes[3];
+
+    std::vector<glm::vec3> convexHullVertices;
+    std::vector<glm::vec3> faceNormals;
+
 
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures) {
       this->vertices = vertices;

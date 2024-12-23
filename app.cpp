@@ -26,6 +26,7 @@
 
 
 std::vector<Model> modelsList;
+
 Model* playerModel = nullptr;
 
 struct Cube {
@@ -132,12 +133,12 @@ int main()
     ourShader = new Shader("shaders/shader.vs", "shaders/shader.fs");
 
     //Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
-    Model ourModel("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLine.obj");//FileSystem::getPath("blender/map1.blend"));
+    //Model ourModel("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLineOBB.obj");//FileSystem::getPath("blender/map1.blend"));
     //Model ourModel("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj");//FileSystem::getPath("blender/map1.blend"));
     //Model ourModel("FileSystem::getPath("blender/map1.blend"));
     
     playerModel = new Model("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj");
-    modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLine.obj"));
+    modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLineOBB.obj"));
 
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
@@ -296,7 +297,8 @@ int main()
           genRectangleEBO(block, cubeObjectList[i].location, cubeObjectList[i].scaleAmount);
         }
         
-        ourModel.Draw(*ourShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        modelsList[0].Draw(*ourShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        //modelsList[0].updateTransformations(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
         playerModel->Draw(*ourShader, cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -368,17 +370,17 @@ bool playerMove(glm::vec3 movement) {
   
   cameraPos.x += ogMovement.x;
   playerModel->updateTransformations(cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
-  if (clsn.checkCollision(modelsList[0], *playerModel, 1)) { movement.x = 0;}
+  if (clsn.checkCollision(modelsList[0], *playerModel, 2)) { movement.x = 0;}
   cameraPos.x -= ogMovement.x;
 
   cameraPos.y += ogMovement.y;
   playerModel->updateTransformations(cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
-  if (clsn.checkCollision(modelsList[0], *playerModel, 1)) { movement.y = 0;}
+  if (clsn.checkCollision(modelsList[0], *playerModel, 2)) { movement.y = 0;}
   cameraPos.y -= ogMovement.y;
 
   cameraPos.z += ogMovement.z;
   playerModel->updateTransformations(cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
-  if (clsn.checkCollision(modelsList[0], *playerModel, 1)) { movement.z = 0;}
+  if (clsn.checkCollision(modelsList[0], *playerModel, 2)) { movement.z = 0;}
   cameraPos.z -= ogMovement.z;
 
 

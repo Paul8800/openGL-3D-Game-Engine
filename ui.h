@@ -11,67 +11,54 @@
 #include <sstream>
 #include <iostream>
 
-<uiObject> hotbar = ui.createRect({size}, texture="red")
-ui.draw()
+#include "mesh.h"
+#include "model.h"
+#include "Shader.h"
 
+
+struct element {
+  glm::vec2 pos;
+
+  bool show;
+
+  Mesh mesh
+};
 
 class ui
 {
 public:
-
-    const float[] square = {
-       // Positions          // Texture Coords
-      -0.5f,  0.5f, 0.0f,   0.0f, 1.0f,   // Top-left
-      -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,   // Bottom-left
-       0.5f, -0.5f, 0.0f,   1.0f, 0.0f,   // Bottom-right
-       0.5f,  0.5f, 0.0f,   1.0f, 1.0f    // Top-right
-    }
-
-    unsigned int ID;
-    
+    Vector<element> elementList;
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
-    ui(const char* shape, const std::array<float, 4> coords, const char* texture) {
+    ui(glm::vec2 screenSize) {
+
     }
-    // activate the shader
-    // ------------------------------------------------------------------------
-    void rect(std::array<float, 4> coords = {0, 0, 100, 100}, char* texture = "") {
-        glm::mat4 model = glm::mat4(1.0f);
-
-        glm::vec3 translation(location[0], location[1], location[2]);
-
-        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor, scaleFactor, 1.0f));
-
-        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, 1.0f, 1.0f));
-
-        model = glm::translate(model, translation);
-
-        ourShader->setMat4("model", model);
-    }
-    void draw() 
-    { 
-        glUseProgram(ID); 
     
-    // utility uniform functions
-    // ------------------------------------------------------------------------
-    void setBool(const std::string &name, bool value) const {         
+    void draw(glm::vec3 cameraPos, glm::vec3 cameraPos, Shader shader) {
+      glm::mat4 model = glm::mat4(1.0f);
+      model = glm::translate(model, cameraPos);
+      model = glm::rotate(model, translation);
+
+      for(unsigned int i = 0; i < elementList.size(); i++) {
+        elementList[i].mesh.Draw(shader);
+      }
+    } 
+
+    void addElement(Mesh mesh) { //add a mesh to the UI
+      element newElement;
+      newElement.mesh = mesh;
+      elementList.push_back(meshes[i]);
+
     }
-    // ------------------------------------------------------------------------
-    void setInt(const std::string &name, int value) const { 
+
+    void addElements(Model model) { //add a model(model contains many meshes)
+      for(unsigned int i = 0; i < model.meshes.size(); i++) {
+        addElement(model.meshes[i]);
+      }
     }
-    // ------------------------------------------------------------------------
-    void setFloat(const std::string &name, float value) const { 
-    }
-    // ------------------------------------------------------------------------
-    void setMat4(const std::string &name, const glm::mat4 &value) {
-    }
+    
 
 private:
-    // utility function for checking shader compilation/linking errors.
-    // ------------------------------------------------------------------------
-    void checkCompileErrors(unsigned int shader, std::string type)
-    {
-     
-    }
+
 };
 #endif

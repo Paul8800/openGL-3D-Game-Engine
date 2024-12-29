@@ -139,6 +139,7 @@ int main()
     
     playerModel = new Model("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj");
     modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLineOBB.obj"));
+    //modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/dust2.obj"));
 
 
     // set up vertex data (and buffer(s)) and configure vertex attributes

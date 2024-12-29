@@ -42,8 +42,13 @@ class Mesh {
     float width = -1.0f;
     float height = -1.0f;
 
+    glm::vec3 rotationOBB = glm::vec3(-1.0f, -1.0f, -1.0f);
+
     glm::vec3 halfExtents = glm::vec3(-1.0f, -1.0f, -1.0f);
-    glm::vec3 axes[3];
+    glm::vec3 localCenter;
+     glm::vec3 axes[3] = {glm::vec3(1.0f, 0.0f, 0.0f),  // X-axis
+                         glm::vec3(0.0f, 1.0f, 0.0f),  // Y-axis
+                         glm::vec3(0.0f, 0.0f, 1.0f)}; // Z-axis
 
     std::vector<glm::vec3> convexHullVertices;
     std::vector<glm::vec3> faceNormals;

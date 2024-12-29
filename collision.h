@@ -144,13 +144,167 @@ class Collision {
 
     }
 
-    
+
+    glm::vec3 findAreaOfAABB(Mesh& obj, glm::mat4& r) {
+
+    glm::vec3 dimensions;
+
+    glm::vec3 currentVert;
+    // Step 1: Compute for the lowest and highest x values to determine length
+    currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
+    float lengthMin = currentVert.x;
+    float lengthMax = currentVert.x;
+    for (const auto& vertex : obj.vertices) {
+        currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
+        if (lengthMin > currentVert.x) lengthMin = currentVert.x;
+        if (lengthMax < currentVert.x) lengthMax = currentVert.x;
+    }
+    dimensions.x = (lengthMax - lengthMin);
+
+    currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
+    float heightMin = currentVert.y;
+    float heightMax = currentVert.y;
+    for (const auto& vertex : obj.vertices) {
+        currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
+        if (heightMin > currentVert.y) heightMin = currentVert.y;
+        if (heightMax < currentVert.y) heightMax = currentVert.y;
+    }
+    dimensions.x = (heightMax - heightMin);
+
+    currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
+    float widthMin = currentVert.z;
+    float widthMax = currentVert.z;
+    for (const auto& vertex : obj.vertices) {
+        currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
+        if (widthMin > currentVert.z) widthMin = currentVert.z;
+        if (widthMax < currentVert.z) widthMax = currentVert.z;
+    }
+    dimensions.x = (widthMax - widthMin);
 
 
+    if (dimensions.x == 0) dimensions.x = 1;
+    if (dimensions.y == 0) dimensions.y = 1;
+    if (dimensions.z == 0) dimensions.z = 1;
 
+    return dimensions;
+}
 
 
 void initOBB(Mesh& obj) {
+  float volume = obj.length * obj.width * obj.height;
+
+  glm::vec3 optimalRotation;
+
+  glm::mat4 model = glm::mat4(1.0f);
+  const float angleStep = glm::radians(1.0f); // 1-degree step
+  
+
+  for (float x = 0; x < 360; x+=10) {
+    model = glm::rotate(model, glm::radians(x), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    glm::vec3 AABBrotated = findAreaOfAABB(obj, model);
+    if ((AABBrotated.x * AABBrotated.y * AABBrotated.z) < volume) {
+      volume = AABBrotated.x * AABBrotated.y * AABBrotated.z;
+      optimalRotation.x = x;
+    }
+
+  }
+  for (float y = 0; y < 360; y+=10) {
+    model = glm::rotate(model, glm::radians(y), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::vec3 AABBrotated = findAreaOfAABB(obj, model);
+    if ((AABBrotated.x * AABBrotated.y * AABBrotated.z) < volume) {
+      volume = AABBrotated.x * AABBrotated.y * AABBrotated.z;
+      optimalRotation.y = y;
+    }
+
+  }
+  for (float z = 0; z < 360; z+=10) {
+    model = glm::rotate(model, glm::radians(z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    glm::vec3 AABBrotated = findAreaOfAABB(obj, model);
+    if ((AABBrotated.x * AABBrotated.y * AABBrotated.z) < volume) {
+      volume = AABBrotated.x * AABBrotated.y * AABBrotated.z;
+      optimalRotation.z = z;
+    }
+
+  }
+
+  /*for (float x = 0; x < 360; x+=10) {
+    for (float y = 0; y < 360; y+=10) {
+      for (float z = 0; z < 360; z+=10) {
+        model = glm::rotate(model, glm::radians(x), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(y), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        //gulm::mat4 rotation = glm::yawPitchRoll(x * angleStep, y * angleStep, z * angleStep);
+
+        float newVol = findAreaOfAABB(obj, model);
+        if (newVol < volume) {
+          volume = newVol;
+          optimalRotation = glm::vec3(x, y, z);
+        }
+      }
+    }
+  }*/
+      
+  obj.rotationOBB = optimalRotation;
+}
+    
+bool OBB(Mesh& objA, Mesh& objB) {
+  if (objA.rotationOBB.x == -1.0f) initOBB(objA);
+  if (objB.rotationOBB.x == -1.0f) initOBB(objB);
+
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::rotate(model, glm::radians(objA.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
+  model = glm::rotate(model, glm::radians(objA.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
+  model = glm::rotate(model, glm::radians(objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
+  glm::vec3 dimB = findAreaOfAABB(objB, model);
+
+  glm::vec3 centerA = glm::vec3(objA.modelTrans * glm::vec4(objA.center, 1.0f));
+  centerA = glm::vec3(model * glm::vec4(objA.center, 1.0f));
+
+
+
+  model = glm::mat4(1.0f);
+  model = glm::rotate(model, glm::radians(objA.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
+  model = glm::rotate(model, glm::radians(objA.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
+  model = glm::rotate(model, glm::radians(objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
+  glm::vec3 dimA = findAreaOfAABB(objA, model);
+
+  glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
+  centerB = glm::vec3(model * glm::vec4(objB.center, 1.0f));
+
+
+
+
+
+  bool overlapX = (centerA.x + dimA.x/2 > centerB.x - dimB.x/2) &&
+                  (centerA.x - dimA.x/2 < centerB.x + dimB.x/2);
+
+  bool overlapY = (centerA.y + dimA.y/2 > centerB.y - dimB.y/2) &&
+                  (centerA.y - dimA.y/2 < centerB.y + dimB.y/2);
+
+  bool overlapZ = (centerA.z + dimA.z/2 > centerB.z - dimB.z/2) &&
+                  (centerA.z - dimA.z/2 < centerB.z + dimB.z/2);
+
+  // Return true if there is overlap in all three axes
+  if (!(overlapX && overlapY && overlapZ)) return false;
+
+
+
+
+  return true;
+}
+
+
+
+
+
+
+
+
+void initOBB2(Mesh& obj) {
     glm::vec3 minPoint = obj.vertices[0].Position;
     glm::vec3 maxPoint = obj.vertices[0].Position;
 
@@ -159,29 +313,43 @@ void initOBB(Mesh& obj) {
         maxPoint = glm::max(maxPoint, vertex.Position);
     }
 
-    obj.center = (minPoint + maxPoint) / 2.0f;
+    // Set the local center and half-extents in local space
+    obj.localCenter = (maxPoint + minPoint) / 2.0f;
     obj.halfExtents = (maxPoint - minPoint) / 2.0f;
 
-    // Compute the local axes from the model matrix (this could be rotated/scaled axes)
-    obj.axes[0] = glm::vec3(obj.modelTrans * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)); // X-axis
-    obj.axes[1] = glm::vec3(obj.modelTrans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f)); // Y-axis
-    obj.axes[2] = glm::vec3(obj.modelTrans * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)); // Z-axis
+    // Transform axes (identity by default, updated in OBB collision check)
+    obj.axes[0] = glm::vec3(1.0f, 0.0f, 0.0f); // X-axis
+    obj.axes[1] = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
+    obj.axes[2] = glm::vec3(0.0f, 0.0f, 1.0f); // Z-axis
 }
 
-bool OBB(Mesh& objA, Mesh& objB) {
+
+    
+
+bool OBB2(Mesh& objA, Mesh& objB) {
     if (objA.halfExtents.x == -1.0f) initOBB(objA);
     if (objB.halfExtents.x == -1.0f) initOBB(objB);
 
-    glm::vec3 centerA = glm::vec3(objA.modelTrans * glm::vec4(objA.center, 1.0f));
-    glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
+    // Transform centers into world space
+    glm::vec3 centerA = glm::vec3(objA.modelTrans * glm::vec4(objA.localCenter, 1.0f));
+    glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.localCenter, 1.0f));
 
-    glm::mat3 axesA = glm::mat3(objA.modelTrans);
-    glm::mat3 axesB = glm::mat3(objB.modelTrans);
+    // Extract axes from transformations
+    glm::vec3 axesA[3] = {
+        glm::normalize(glm::vec3(objA.modelTrans * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f))),
+        glm::normalize(glm::vec3(objA.modelTrans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f))),
+        glm::normalize(glm::vec3(objA.modelTrans * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)))
+    };
 
-    glm::vec3 T = centerB - centerA; // Vector between centers in world space
-    T = glm::vec3(glm::dot(T, axesA[0]), glm::dot(T, axesA[1]), glm::dot(T, axesA[2]));
+    glm::vec3 axesB[3] = {
+        glm::normalize(glm::vec3(objB.modelTrans * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f))),
+        glm::normalize(glm::vec3(objB.modelTrans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f))),
+        glm::normalize(glm::vec3(objB.modelTrans * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)))
+    };
 
+    glm::vec3 T = centerB - centerA; // Vector between centers
     glm::mat3 R, AbsR;
+
     const float EPSILON = 1e-6f;
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -190,28 +358,35 @@ bool OBB(Mesh& objA, Mesh& objB) {
         }
     }
 
+    // Test axes A[i]
     for (int i = 0; i < 3; ++i) {
         float ra = objA.halfExtents[i];
         float rb = objB.halfExtents.x * AbsR[i][0] + objB.halfExtents.y * AbsR[i][1] + objB.halfExtents.z * AbsR[i][2];
-        if (std::abs(T[i]) > ra + rb) return false;
+        if (std::abs(glm::dot(T, axesA[i])) > ra + rb) return false;
     }
 
+    // Test axes B[j]
     for (int i = 0; i < 3; ++i) {
         float ra = objA.halfExtents.x * AbsR[0][i] + objA.halfExtents.y * AbsR[1][i] + objA.halfExtents.z * AbsR[2][i];
         float rb = objB.halfExtents[i];
-        if (std::abs(glm::dot(T, glm::vec3(R[0][i], R[1][i], R[2][i]))) > ra + rb) return false;
+        if (std::abs(glm::dot(T, axesB[i])) > ra + rb) return false;
     }
 
+    // Test cross products of A[i] and B[j]
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            float ra = objA.halfExtents[(i + 1) % 3] * AbsR[(i + 2) % 3][j] + objA.halfExtents[(i + 2) % 3] * AbsR[(i + 1) % 3][j];
-            float rb = objB.halfExtents[(j + 1) % 3] * AbsR[i][(j + 2) % 3] + objB.halfExtents[(j + 2) % 3] * AbsR[i][(j + 1) % 3];
+            float ra = objA.halfExtents[(i + 1) % 3] * AbsR[(i + 2) % 3][j] +
+                       objA.halfExtents[(i + 2) % 3] * AbsR[(i + 1) % 3][j];
+            float rb = objB.halfExtents[(j + 1) % 3] * AbsR[i][(j + 2) % 3] +
+                       objB.halfExtents[(j + 2) % 3] * AbsR[i][(j + 1) % 3];
             if (std::abs(T[i] * R[i][j]) > ra + rb) return false;
         }
     }
 
-    return true; // No separating axis found
+    return true; // No separating axis found, OBBs are colliding
 }
+
+
 
 
 

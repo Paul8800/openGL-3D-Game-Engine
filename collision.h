@@ -145,61 +145,51 @@ class Collision {
     }
 
 
-    glm::vec3 findAreaOfAABB(Mesh& obj, glm::mat4& r) {
 
+glm::vec3 findAreaOfAABB(Mesh& obj, glm::mat4& r) {
     glm::vec3 dimensions;
 
-    glm::vec3 currentVert;
-    // Step 1: Compute for the lowest and highest x values to determine length
-    currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
-    float lengthMin = currentVert.x;
-    float lengthMax = currentVert.x;
+    // Initialize min and max values to a very large and very small number
+    float lengthMin = FLT_MAX, lengthMax = -FLT_MAX;
+    float heightMin = FLT_MAX, heightMax = -FLT_MAX;
+    float widthMin = FLT_MAX, widthMax = -FLT_MAX;
+
+    // Iterate through all vertices of the mesh
     for (const auto& vertex : obj.vertices) {
-        currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
+        // Transform the vertex using the rotation matrix
+        glm::vec3 currentVert = glm::vec3(r * glm::vec4(vertex.Position, 1.0f));
+
+        // Update min and max for each axis
         if (lengthMin > currentVert.x) lengthMin = currentVert.x;
         if (lengthMax < currentVert.x) lengthMax = currentVert.x;
-    }
-    dimensions.x = (lengthMax - lengthMin);
 
-    currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
-    float heightMin = currentVert.y;
-    float heightMax = currentVert.y;
-    for (const auto& vertex : obj.vertices) {
-        currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
         if (heightMin > currentVert.y) heightMin = currentVert.y;
         if (heightMax < currentVert.y) heightMax = currentVert.y;
-    }
-    dimensions.x = (heightMax - heightMin);
 
-    currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
-    float widthMin = currentVert.z;
-    float widthMax = currentVert.z;
-    for (const auto& vertex : obj.vertices) {
-        currentVert = glm::vec3(r * glm::vec4(obj.vertices[0].Position, 1.0f));
         if (widthMin > currentVert.z) widthMin = currentVert.z;
         if (widthMax < currentVert.z) widthMax = currentVert.z;
     }
-    dimensions.x = (widthMax - widthMin);
 
-
-    if (dimensions.x == 0) dimensions.x = 1;
-    if (dimensions.y == 0) dimensions.y = 1;
-    if (dimensions.z == 0) dimensions.z = 1;
+    // Compute dimensions of the AABB
+    dimensions.x = lengthMax - lengthMin;
+    dimensions.y = heightMax - heightMin;
+    dimensions.z = widthMax - widthMin;
 
     return dimensions;
 }
 
 
+
 void initOBB(Mesh& obj) {
   float volume = obj.length * obj.width * obj.height;
 
-  glm::vec3 optimalRotation;
+  glm::vec3 optimalRotation = glm::vec3(0.0f, 0.0f, 0.0f);
 
-  glm::mat4 model = glm::mat4(1.0f);
   const float angleStep = glm::radians(1.0f); // 1-degree step
   
 
   for (float x = 0; x < 360; x+=10) {
+    glm::mat4 model = glm::mat4(1.0f);
     model = glm::rotate(model, glm::radians(x), glm::vec3(1.0f, 0.0f, 0.0f));
 
     glm::vec3 AABBrotated = findAreaOfAABB(obj, model);
@@ -210,6 +200,7 @@ void initOBB(Mesh& obj) {
 
   }
   for (float y = 0; y < 360; y+=10) {
+    glm::mat4 model = glm::mat4(1.0f);
     model = glm::rotate(model, glm::radians(y), glm::vec3(0.0f, 1.0f, 0.0f));
 
     glm::vec3 AABBrotated = findAreaOfAABB(obj, model);
@@ -220,6 +211,7 @@ void initOBB(Mesh& obj) {
 
   }
   for (float z = 0; z < 360; z+=10) {
+    glm::mat4 model = glm::mat4(1.0f);
     model = glm::rotate(model, glm::radians(z), glm::vec3(0.0f, 0.0f, 1.0f));
 
     glm::vec3 AABBrotated = findAreaOfAABB(obj, model);
@@ -227,6 +219,8 @@ void initOBB(Mesh& obj) {
       volume = AABBrotated.x * AABBrotated.y * AABBrotated.z;
       optimalRotation.z = z;
     }
+
+    std::cout << "Rotation: " << optimalRotation.x << ", " << optimalRotation.y << ", " << optimalRotation.z << std::endl;
 
   }
 
@@ -261,19 +255,17 @@ bool OBB(Mesh& objA, Mesh& objB) {
   model = glm::rotate(model, glm::radians(objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
   glm::vec3 dimB = findAreaOfAABB(objB, model);
 
-  glm::vec3 centerA = glm::vec3(objA.modelTrans * glm::vec4(objA.center, 1.0f));
-  centerA = glm::vec3(model * glm::vec4(objA.center, 1.0f));
+  glm::mat4 combinedTransform = objA.modelTrans * model;
+  glm::vec3 centerA = glm::vec3(combinedTransform * glm::vec4(objA.center, 1.0f));
+  //centerA = glm::vec3(model * glm::vec4(objA.center, 1.0f));
 
+  
 
-
-  model = glm::mat4(1.0f);
-  model = glm::rotate(model, glm::radians(objA.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
-  model = glm::rotate(model, glm::radians(objA.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
-  model = glm::rotate(model, glm::radians(objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
   glm::vec3 dimA = findAreaOfAABB(objA, model);
 
-  glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
-  centerB = glm::vec3(model * glm::vec4(objB.center, 1.0f));
+  combinedTransform = objB.modelTrans * model;
+  glm::vec3 centerB = glm::vec3(combinedTransform * glm::vec4(objB.center, 1.0f));
+  //centerB = glm::vec3(model * glm::vec4(objB.center, 1.0f));
 
 
 

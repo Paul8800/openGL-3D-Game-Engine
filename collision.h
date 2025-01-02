@@ -223,55 +223,124 @@ void initOBB(Mesh& obj) {
     std::cout << "Rotation: " << optimalRotation.x << ", " << optimalRotation.y << ", " << optimalRotation.z << std::endl;
 
   }
-
-  /*for (float x = 0; x < 360; x+=10) {
-    for (float y = 0; y < 360; y+=10) {
-      for (float z = 0; z < 360; z+=10) {
-        model = glm::rotate(model, glm::radians(x), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(y), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        //gulm::mat4 rotation = glm::yawPitchRoll(x * angleStep, y * angleStep, z * angleStep);
-
-        float newVol = findAreaOfAABB(obj, model);
-        if (newVol < volume) {
-          volume = newVol;
-          optimalRotation = glm::vec3(x, y, z);
-        }
-      }
-    }
-  }*/
       
   obj.rotationOBB = glm::vec3(0.0f, 0.0f, -140.0f);//optimalRotation;
+  //obj.rotationOBB = optimalRotation;
 }
-    
+
+
 bool OBB(Mesh& objA, Mesh& objB) {
-  if (objA.rotationOBB.x == -1.0f) initOBB(objA);
-  if (objB.rotationOBB.x == -1.0f) initOBB(objB);
+    // Ensure OBB rotations are initialized
+    if (objA.rotationOBB.x == -1.0f) initOBB(objA); 
+    if (objB.rotationOBB.x == -1.0f) initOBB(objB); 
+
+    // Helper lambda for overlap check
+    auto checkOverlap = [](glm::vec3 centerA, glm::vec3 dimA, glm::vec3 centerB, glm::vec3 dimB) -> bool {
+        return (centerA.x + dimA.x / 2 > centerB.x - dimB.x / 2 &&
+                centerA.x - dimA.x / 2 < centerB.x + dimB.x / 2) &&
+               (centerA.y + dimA.y / 2 > centerB.y - dimB.y / 2 &&
+                centerA.y - dimA.y / 2 < centerB.y + dimB.y / 2) &&
+               (centerA.z + dimA.z / 2 > centerB.z - dimB.z / 2 &&
+                centerA.z - dimA.z / 2 < centerB.z + dimB.z / 2);
+    };
+
+    // Transform and check overlap in objA's reference frame
+    glm::mat4 rotationMatrixA = glm::mat4(1.0f);
+    rotationMatrixA = glm::rotate(rotationMatrixA, glm::radians(objA.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    rotationMatrixA = glm::rotate(rotationMatrixA, glm::radians(objA.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationMatrixA = glm::rotate(rotationMatrixA, glm::radians(objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+
+    glm::vec3 centerA = glm::vec3(rotationMatrixA * glm::vec4(objA.center, 1.0f));
+
+    glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
+    centerB = glm::vec3(rotationMatrixA * glm::vec4(centerB, 1.0f));
+
+    glm::vec3 dimA = findAreaOfAABB(objA, rotationMatrixA);
+    glm::vec3 dimB = findAreaOfAABB(objB, rotationMatrixA);
+
+    std::cout << "" << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << "-                   ObjA rotations check                       -" << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << "objA centerA: " << centerA.x << ", " << centerA.y << ", " << centerA.z << std::endl;
+    std::cout << "objA Dims: " << dimA.x << ", " << dimA.y << ", " << dimA.z << std::endl;
+    std::cout << "objB centerA: " << centerB.x << ", " << centerB.y << ", " << centerB.z << std::endl;
+    std::cout << "objB Dims: " << dimB.x << ", " << dimB.y << ", " << dimB.z << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "" << std::endl;
+
+
+    if (!checkOverlap(centerA, dimA, centerB, dimB)) return false;
+
+    // Transform and check overlap in objB's reference frame
+    glm::mat4 rotationMatrixB = glm::mat4(1.0f);
+    rotationMatrixB = glm::rotate(rotationMatrixB, glm::radians(objB.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    rotationMatrixB = glm::rotate(rotationMatrixB, glm::radians(objB.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationMatrixB = glm::rotate(rotationMatrixB, glm::radians(objB.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    centerA = glm::vec3(rotationMatrixB * glm::vec4(objA.center, 1.0f));
+
+    centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
+    centerB = glm::vec3(rotationMatrixB * glm::vec4(centerB, 1.0f));
+
+    dimA = findAreaOfAABB(objA, rotationMatrixB);
+    dimB = findAreaOfAABB(objB, rotationMatrixB);
+
+
+    std::cout << "" << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << "-                   ObjB rotations check                       -" << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << "objA centerA: " << centerA.x << ", " << centerA.y << ", " << centerA.z << std::endl;
+    std::cout << "objA Dims: " << dimA.x << ", " << dimA.y << ", " << dimA.z << std::endl;
+    std::cout << "objB centerA: " << centerB.x << ", " << centerB.y << ", " << centerB.z << std::endl;
+    std::cout << "objB Dims: " << dimB.x << ", " << dimB.y << ", " << dimB.z << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    std::cout << "" << std::endl;
+    std::cout << "" << std::endl;
+
+
+    if (!checkOverlap(centerA, dimA, centerB, dimB)) return false;
+
+    // If both checks pass, collision occurred
+    return true;
+}
+
+    
+bool OBBog(Mesh& objA, Mesh& objB) {
+  if (objA.rotationOBB.x == -1.0f) initOBB(objA); //gets the roattion of the object
+  if (objB.rotationOBB.x == -1.0f) initOBB(objB); //gets the rotation of second object
 
   glm::mat4 model = glm::mat4(1.0f);//objA.modelTrans;
-  model = glm::translate(model, -objA.center);
+  model = glm::translate(model, objA.center);
   model = glm::rotate(model, glm::radians(objA.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
   model = glm::rotate(model, glm::radians(objA.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
   model = glm::rotate(model, glm::radians(objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
-  model = glm::translate(model, glm::vec3(objA.center));
+
   glm::vec3 dimA = findAreaOfAABB(objA, model);
 
-  glm::vec3 centerA = glm::vec3(glm::vec4(objA.center, 1.0f));
+
+  model = glm::translate(model, glm::vec3(-objA.center));
+  glm::vec3 centerA = glm::vec3(model * glm::vec4(objA.center, 1.0f));
 
   
 
 
   model = glm::mat4(1.0f); //objB.modelTrans;
-  model = glm::translate(model, -objB.center);
+  model = glm::translate(model, objB.center);
   model = glm::rotate(model, glm::radians(objA.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
   model = glm::rotate(model, glm::radians(objA.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
   model = glm::rotate(model, glm::radians(objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
-  model = glm::translate(model, glm::vec3(objB.center));
-  glm::vec3 centerB = glm::vec3(model * glm::vec4(objB.center, 1.0f));
-  
+    
   
   glm::vec3 dimB = findAreaOfAABB(objB, model);
+
+  model = glm::translate(model, glm::vec3(-objB.center));
+  glm::vec3 centerB = glm::vec3(model * glm::vec4(objB.center, 1.0f));
 
 
   //std::cout << "OBJA centerA: " << centerA.x << ", " << centerA.y << ", " << centerA.z << std::endl;
@@ -293,31 +362,32 @@ bool OBB(Mesh& objA, Mesh& objB) {
 
 
 
-
-
   model = glm::mat4(1.0f);//objA.modelTrans;
-  model = glm::translate(model, -objA.center);
+  model = glm::translate(model, objA.center);
   model = glm::rotate(model, glm::radians(objB.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
   model = glm::rotate(model, glm::radians(objB.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
   model = glm::rotate(model, glm::radians(objB.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
-  model = glm::translate(model, glm::vec3(objA.center));
+
   dimA = findAreaOfAABB(objA, model);
 
-  centerA = glm::vec3(glm::vec4(objA.center, 1.0f));
+
+  model = glm::translate(model, glm::vec3(-objA.center));
+  centerA = glm::vec3(model * glm::vec4(objA.center, 1.0f));
 
   
 
 
   model = glm::mat4(1.0f); //objB.modelTrans;
-  model = glm::translate(model, -objB.center);
+  model = glm::translate(model, objB.center);
   model = glm::rotate(model, glm::radians(objB.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
   model = glm::rotate(model, glm::radians(objB.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
   model = glm::rotate(model, glm::radians(objB.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
-  model = glm::translate(model, glm::vec3(objB.center));
-  centerB = glm::vec3(model * glm::vec4(objB.center, 1.0f));
-  
-  
+
   dimB = findAreaOfAABB(objB, model);
+
+  
+  model = glm::translate(model, glm::vec3(-objB.center));
+  centerB = glm::vec3(model * glm::vec4(objB.center, 1.0f));
 
 
   //std::cout << "OBJA centerA: " << centerA.x << ", " << centerA.y << ", " << centerA.z << std::endl;

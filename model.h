@@ -31,7 +31,7 @@ public:
     modelTrans = glm::mat4(1.0f);
     modelTrans = glm::translate(modelTrans, translation);
     modelTrans = glm::scale(modelTrans, scale);
-    //modelTrans = glm::rotate(modelTrans, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    if (scale.x == 1.1f) modelTrans = glm::rotate(modelTrans, glm::radians(140.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
     shader.setMat4("model", modelTrans);
 

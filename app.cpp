@@ -139,6 +139,7 @@ int main()
     
     playerModel = new Model("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj");
     modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLineOBB.obj"));
+    modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj"));
     //modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/dust2.obj"));
 
 
@@ -299,6 +300,7 @@ int main()
         }
         
         modelsList[0].Draw(*ourShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        modelsList[1].Draw(*ourShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.1f, 1.0f, 1.0f));
         //modelsList[0].updateTransformations(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
         playerModel->Draw(*ourShader, cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));

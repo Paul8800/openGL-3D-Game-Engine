@@ -242,33 +242,39 @@ void initOBB(Mesh& obj) {
     }
   }*/
       
-  obj.rotationOBB = optimalRotation;
+  obj.rotationOBB = glm::vec3(0.0f, 0.0f, -140.0f);//optimalRotation;
 }
     
 bool OBB(Mesh& objA, Mesh& objB) {
   if (objA.rotationOBB.x == -1.0f) initOBB(objA);
   if (objB.rotationOBB.x == -1.0f) initOBB(objB);
 
-  glm::mat4 model = glm::mat4(1.0f);
+  glm::mat4 model = glm::mat4(1.0f);//objA.modelTrans;
+  model = glm::translate(model, -objA.center);
   model = glm::rotate(model, glm::radians(objA.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
   model = glm::rotate(model, glm::radians(objA.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
   model = glm::rotate(model, glm::radians(objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
-  glm::vec3 dimB = findAreaOfAABB(objB, model);
+  model = glm::translate(model, glm::vec3(objA.center));
+  glm::vec3 dimA = findAreaOfAABB(objA, model);
 
-  glm::mat4 combinedTransform = objA.modelTrans * model;
-  glm::vec3 centerA = glm::vec3(combinedTransform * glm::vec4(objA.center, 1.0f));
-  //centerA = glm::vec3(model * glm::vec4(objA.center, 1.0f));
+  glm::vec3 centerA = glm::vec3(glm::vec4(objA.center, 1.0f));
 
   
 
-  glm::vec3 dimA = findAreaOfAABB(objA, model);
 
-  combinedTransform = objB.modelTrans * model;
-  glm::vec3 centerB = glm::vec3(combinedTransform * glm::vec4(objB.center, 1.0f));
-  //centerB = glm::vec3(model * glm::vec4(objB.center, 1.0f));
+  model = glm::mat4(1.0f); //objB.modelTrans;
+  model = glm::translate(model, -objB.center);
+  model = glm::rotate(model, glm::radians(objA.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
+  model = glm::rotate(model, glm::radians(objA.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
+  model = glm::rotate(model, glm::radians(objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
+  model = glm::translate(model, glm::vec3(objB.center));
+  glm::vec3 centerB = glm::vec3(model * glm::vec4(objB.center, 1.0f));
+  
+  
+  glm::vec3 dimB = findAreaOfAABB(objB, model);
 
 
-
+  //std::cout << "OBJA centerA: " << centerA.x << ", " << centerA.y << ", " << centerA.z << std::endl;
 
 
   bool overlapX = (centerA.x + dimA.x/2 > centerB.x - dimB.x/2) &&
@@ -278,6 +284,52 @@ bool OBB(Mesh& objA, Mesh& objB) {
                   (centerA.y - dimA.y/2 < centerB.y + dimB.y/2);
 
   bool overlapZ = (centerA.z + dimA.z/2 > centerB.z - dimB.z/2) &&
+                  (centerA.z - dimA.z/2 < centerB.z + dimB.z/2);
+
+  // Return true if there is overlap in all three axes
+  if (!(overlapX && overlapY && overlapZ)) return false;
+
+
+
+
+
+
+
+  model = glm::mat4(1.0f);//objA.modelTrans;
+  model = glm::translate(model, -objA.center);
+  model = glm::rotate(model, glm::radians(objB.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
+  model = glm::rotate(model, glm::radians(objB.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
+  model = glm::rotate(model, glm::radians(objB.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
+  model = glm::translate(model, glm::vec3(objA.center));
+  dimA = findAreaOfAABB(objA, model);
+
+  centerA = glm::vec3(glm::vec4(objA.center, 1.0f));
+
+  
+
+
+  model = glm::mat4(1.0f); //objB.modelTrans;
+  model = glm::translate(model, -objB.center);
+  model = glm::rotate(model, glm::radians(objB.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
+  model = glm::rotate(model, glm::radians(objB.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
+  model = glm::rotate(model, glm::radians(objB.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
+  model = glm::translate(model, glm::vec3(objB.center));
+  centerB = glm::vec3(model * glm::vec4(objB.center, 1.0f));
+  
+  
+  dimB = findAreaOfAABB(objB, model);
+
+
+  //std::cout << "OBJA centerA: " << centerA.x << ", " << centerA.y << ", " << centerA.z << std::endl;
+
+
+  overlapX = (centerA.x + dimA.x/2 > centerB.x - dimB.x/2) &&
+                  (centerA.x - dimA.x/2 < centerB.x + dimB.x/2);
+
+  overlapY = (centerA.y + dimA.y/2 > centerB.y - dimB.y/2) &&
+                  (centerA.y - dimA.y/2 < centerB.y + dimB.y/2);
+
+  overlapZ = (centerA.z + dimA.z/2 > centerB.z - dimB.z/2) &&
                   (centerA.z - dimA.z/2 < centerB.z + dimB.z/2);
 
   // Return true if there is overlap in all three axes

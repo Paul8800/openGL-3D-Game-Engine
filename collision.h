@@ -259,7 +259,7 @@ bool OBB(Mesh& objA, Mesh& objB) {
     glm::vec3 dimA = findAreaOfAABB(objA, rotationMatrixA);
     glm::vec3 dimB = findAreaOfAABB(objB, rotationMatrixA);
 
-    std::cout << "" << std::endl;
+    /*std::cout << "" << std::endl;
     std::cout << "" << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << "-                   ObjA rotations check                       -" << std::endl;
@@ -270,7 +270,7 @@ bool OBB(Mesh& objA, Mesh& objB) {
     std::cout << "objB Dims: " << dimB.x << ", " << dimB.y << ", " << dimB.z << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << "" << std::endl;
-    std::cout << "" << std::endl;
+    std::cout << "" << std::endl;*/
 
 
     if (!checkOverlap(centerA, dimA, centerB, dimB)) return false;
@@ -290,7 +290,7 @@ bool OBB(Mesh& objA, Mesh& objB) {
     dimB = findAreaOfAABB(objB, rotationMatrixB);
 
 
-    std::cout << "" << std::endl;
+    /*std::cout << "" << std::endl;
     std::cout << "" << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << "-                   ObjB rotations check                       -" << std::endl;
@@ -301,7 +301,7 @@ bool OBB(Mesh& objA, Mesh& objB) {
     std::cout << "objB Dims: " << dimB.x << ", " << dimB.y << ", " << dimB.z << std::endl;
     std::cout << "----------------------------------------------------------------" << std::endl;
     std::cout << "" << std::endl;
-    std::cout << "" << std::endl;
+    std::cout << "" << std::endl;*/
 
 
     if (!checkOverlap(centerA, dimA, centerB, dimB)) return false;

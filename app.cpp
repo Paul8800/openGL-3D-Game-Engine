@@ -303,7 +303,7 @@ int main()
         modelsList[1].Draw(*ourShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.1f, 1.0f, 1.0f));
         //modelsList[0].updateTransformations(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
-        playerModel->Draw(*ourShader, cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
+        playerModel->Draw(*ourShader, glm::vec3(cameraPos.x, cameraPos.y-1.5, cameraPos.z+4), glm::vec3(1.0f, 1.0f, 1.0f));
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------

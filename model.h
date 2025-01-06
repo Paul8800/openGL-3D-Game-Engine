@@ -26,12 +26,14 @@ public:
     loadModel(path);
   }
   
-  void Draw(Shader &shader, glm::vec3 translation, glm::vec3 scale) {
+  void Draw(Shader &shader, glm::vec3 translation, glm::vec3 scale, glm::vec3 rotation = glm::vec3(0.0f, 0.0f, 0.0f)) {
     
     modelTrans = glm::mat4(1.0f);
     modelTrans = glm::translate(modelTrans, translation);
     modelTrans = glm::scale(modelTrans, scale);
-    if (scale.x == 1.1f) modelTrans = glm::rotate(modelTrans, glm::radians(140.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    modelTrans = glm::rotate(modelTrans, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    modelTrans = glm::rotate(modelTrans, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    modelTrans = glm::rotate(modelTrans, glm::radians(rotation.z), glm::vec3(1.0f, 0.0f, 1.0f));
 
     shader.setMat4("model", modelTrans);
 

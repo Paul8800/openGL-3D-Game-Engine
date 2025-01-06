@@ -5,6 +5,7 @@
 !blender/
 
 !shaders/
+!shader.h
 !mesh.h
 !model.h
 

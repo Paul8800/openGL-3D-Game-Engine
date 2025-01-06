@@ -9,9 +9,11 @@
 #include "include/stb_image.h"
 //#include "include/filesystem.h"
 
-#include "Shader.h"
+#include "shader.h"
 #include "model.h"
 #include "collision.h"
+#include "camera.h"
+#include "ui.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -28,6 +30,7 @@
 std::vector<Model> modelsList;
 
 Model* playerModel = nullptr;
+Camera* camera = nullptr;
 
 struct Cube {
     std::array<float, 3> location; // Center of the cube
@@ -69,7 +72,6 @@ const unsigned int SCR_HEIGHT = 480;
 GLFWmonitor* monitor;
 const GLFWvidmode* mode;
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -127,6 +129,9 @@ int main()
         return -1;
     }
 
+
+    camera = new Camera(window);
+
     // build and compile our shader program
     // ------------------------------------
     //Shader ourShader("shaders/shader.vs", "shaders/shader.fs");
@@ -141,6 +146,7 @@ int main()
     modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLineOBB.obj"));
     modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj"));
     //modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/dust2.obj"));
+    modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/UItest.obj"));
 
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
@@ -228,6 +234,8 @@ int main()
   //cubeObjectList.push_back({ Cube({0, -8, 0}, {500, 5, 500}) });
 
 
+  Ui ui(camera);
+  ui.addElements(modelsList[2], {0, 0}, 10);
 
 
     // render loop
@@ -251,37 +259,21 @@ int main()
 
 
         //Camera
-        glm::vec3 direction;
-        direction.x = cos(glm::radians(yaw) * cos(glm::radians(pitch))); // convert to radians first
-        direction.y = sin(glm::radians(pitch)) * cos(glm::radians(pitch));
-        direction.z = sin(glm::radians(yaw));
-
-        glm::mat4 view;
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        ourShader->setMat4("view", view);
 
         //transformations
-        unsigned int transformLoc = glGetUniformLocation(ourShader->ID,"transform");
         glm::mat4 model = glm::mat4(1.0f);
-        glm::vec3(1.0f, 0.0f, 0.0f);
 
-        //glm::mat4 view = glm::mat4(1.0f);
-        // note that we’re translating the scene in the reverse direction
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        camera->Rotation = glm::vec3(yaw, pitch, roll);
+        camera->Fov = 120;
+        camera->updateCameraView();
 
         glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         ourShader->setMat4("projection", projection);
-
-        int modelLoc = glGetUniformLocation(ourShader->ID, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        int viewLoc = glGetUniformLocation(ourShader->ID, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        int projectionLoc = glGetUniformLocation(ourShader->ID, "projection");
-        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
+        ourShader->setMat4("model", model);
+        ourShader->setMat4("view", camera->getViewMatrix());
 
         // render the meshes
-        ourShader->use(); //shader for white shapes with black outline
+        ourShader->use();
 
         glBindVertexArray(VAO);
 
@@ -303,7 +295,9 @@ int main()
         modelsList[1].Draw(*ourShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.1f, 1.0f, 1.0f));
         //modelsList[0].updateTransformations(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
-        playerModel->Draw(*ourShader, glm::vec3(cameraPos.x, cameraPos.y-1.5, cameraPos.z+4), glm::vec3(1.0f, 1.0f, 1.0f));
+        playerModel->Draw(*ourShader, glm::vec3(camera->Position.x, camera->Position.y-1.5, camera->Position.z+4), glm::vec3(1.0f, 1.0f, 1.0f));
+
+        ui.draw(*ourShader);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -346,7 +340,7 @@ bool checkCollision(const Cube& cubeA, const Cube& cubeB) {
 
 bool playerMove(glm::vec3 movement) {
 
-  Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
+  Cube playerBox({static_cast<float>(camera->Position.x), static_cast<float>(camera->Position.y), static_cast<float>(camera->Position.z)}, {1, 1, 1});
 
   const glm::vec3 ogMovement = movement;
   
@@ -371,27 +365,27 @@ bool playerMove(glm::vec3 movement) {
   //
   Collision clsn;
   
-  cameraPos.x += ogMovement.x;
-  playerModel->updateTransformations(cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
+  camera->Position.x += ogMovement.x;
+  playerModel->updateTransformations(glm::vec3(camera->Position.x, camera->Position.y-1.5, camera->Position.z+4.0f), glm::vec3(1.0f, 1.0f, 1.0f));
   if (clsn.checkCollision(modelsList[0], *playerModel, 2)) { movement.x = 0;}
-  cameraPos.x -= ogMovement.x;
+  camera->Position.x -= ogMovement.x;
 
-  cameraPos.y += ogMovement.y;
-  playerModel->updateTransformations(cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
+  camera->Position.y += ogMovement.y;
+  playerModel->updateTransformations(glm::vec3(camera->Position.x, camera->Position.y-1.5, camera->Position.z+4.0f), glm::vec3(1.0f, 1.0f, 1.0f));
   if (clsn.checkCollision(modelsList[0], *playerModel, 2)) { movement.y = 0;}
-  cameraPos.y -= ogMovement.y;
+  camera->Position.y -= ogMovement.y;
 
-  cameraPos.z += ogMovement.z;
-  playerModel->updateTransformations(cameraPos, glm::vec3(1.0f, 1.0f, 1.0f));
+  camera->Position.z += ogMovement.z;
+  playerModel->updateTransformations(glm::vec3(camera->Position.x, camera->Position.y-1.5, camera->Position.z+4.0f), glm::vec3(1.0f, 1.0f, 1.0f));
   if (clsn.checkCollision(modelsList[0], *playerModel, 2)) { movement.z = 0;}
-  cameraPos.z -= ogMovement.z;
+  camera->Position.z -= ogMovement.z;
 
 
   //   ##################################################
 
 
 
-  cameraPos += movement;
+  camera->Position += movement;
   if (movement.x != ogMovement.x || movement.y != ogMovement.y || movement.z != ogMovement.z) return true;
   
   return false;
@@ -417,7 +411,7 @@ void processInput(GLFWwindow *window)
 
     bool isOnGround = false;
     if (keySwitches["M"] == 1) {
-      Cube playerBox({static_cast<float>(cameraPos.x), static_cast<float>(cameraPos.y), static_cast<float>(cameraPos.z)}, {1, 1, 1});
+      Cube playerBox({static_cast<float>(camera->Position.x), static_cast<float>(camera->Position.y), static_cast<float>(camera->Position.z)}, {1, 1, 1});
       playerBox.location[1] += -verticalSpeed * deltaTime; //apply movement to player
       if (checkCollision(cubeObjectList[0], playerBox) || checkCollision(cubeObjectList[1], playerBox) || checkCollision(cubeObjectList[2], playerBox)) {
         playerVelocityY = 0;
@@ -433,32 +427,22 @@ void processInput(GLFWwindow *window)
     
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-      //playerBox.location += (cameraFront.x, 0.0f,cameraFront.z) * cameraSpeed;
-      //if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos += glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;}
       playerMove(glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed);}
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-      //playerBox.location -= glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;
-      //if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos -= glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed;}
       playerMove(-glm::normalize(glm::vec3(cameraFront.x, 0.0f,cameraFront.z)) * cameraSpeed);}
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-      //playerBox.location -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-      //if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;}
       playerMove(-glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed);}
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-      //playerBox.location += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-      //if (!checkCollision(cubeObjectList[0], playerBox)) cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;}
       playerMove(glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed);}
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-      //playerBox.location[1] -= verticalSpeed;
-      //if (!checkCollision(cubeObjectList[2], playerBox)) cameraPos -= glm::vec3(0.0f, verticalSpeed, 0.0f);
       playerMove(-glm::vec3(0.0f, verticalSpeed, 0.0f));
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
       if (isOnGround && keySwitches["M"] == 1) playerVelocityY = jumpHeight;
-      if (keySwitches["M"]!= 1) cameraPos += glm::vec3(0.0f, verticalSpeed, 0.0f);
+      if (keySwitches["M"]!= 1) camera->Position += glm::vec3(0.0f, verticalSpeed, 0.0f);
     }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-      std::cout << std::round(cameraPos[0]) << ", " << std::round(cameraPos[1]) << ", " << std::round(cameraPos[2]) << std::endl;
+      std::cout << std::round(camera->Position.x) << ", " << std::round(camera->Position.y) << ", " << std::round(camera->Position.z) << std::endl;
 
 
 

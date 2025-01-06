@@ -4,9 +4,9 @@
 Implimented:
 - Collision
 - Model loading
+- 2D GUI
 
 Working on:
-- 2D GUI
 - Lighting
 - Audio (mic input, positional audio, music, sound effects)
 - Animations

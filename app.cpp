@@ -54,7 +54,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void init();
 int loadTexture(std::string name, std::string pathToImg);
-Shader* ourShader = nullptr;
+Shader* shader = nullptr;
 unsigned int textures[6];
 
 void stepPlayerPhysics(float step, float momentum, std::vector<std::vector<std::vector<std::vector<float>>>>& world);
@@ -134,8 +134,8 @@ int main()
 
     // build and compile our shader program
     // ------------------------------------
-    //Shader ourShader("shaders/shader.vs", "shaders/shader.fs");
-    ourShader = new Shader("shaders/shader.vs", "shaders/shader.fs");
+    //Shader shader("shaders/shader.vs", "shaders/shader.fs");
+    shader = new Shader("shaders/shader.vs", "shaders/shader.fs");
 
     //Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
     //Model ourModel("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLineOBB.obj");//FileSystem::getPath("blender/map1.blend"));
@@ -268,21 +268,21 @@ int main()
         camera->updateCameraView();
 
         glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
-        ourShader->setMat4("projection", projection);
-        ourShader->setMat4("model", model);
-        ourShader->setMat4("view", camera->getViewMatrix());
+        shader->setMat4("projection", projection);
+        shader->setMat4("model", model);
+        shader->setMat4("view", camera->getViewMatrix());
 
         // render the meshes
-        ourShader->use();
+        shader->use();
 
         glBindVertexArray(VAO);
 
         
         // Set uniform values
-        ourShader->setVec3("color", glm::vec3(1.0f, 1.0f, 0.0f)); // Red color  
-        ourShader->setVec3("outlineColor", glm::vec3(1.0f, 0.0f, 0.0f)); // Black outline color  
-        ourShader->setFloat("outlineThickness", 0.00f);
-        ourShader->setFloat("outlineOften", 0.5f);
+        shader->setVec3("color", glm::vec3(1.0f, 1.0f, 0.0f)); // Red color  
+        shader->setVec3("outlineColor", glm::vec3(1.0f, 0.0f, 0.0f)); // Black outline color  
+        shader->setFloat("outlineThickness", 0.00f);
+        shader->setFloat("outlineOften", 0.5f);
 
 
 
@@ -291,13 +291,13 @@ int main()
           genRectangleEBO(block, cubeObjectList[i].location, cubeObjectList[i].scaleAmount);
         }
         
-        modelsList[0].Draw(*ourShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-        modelsList[1].Draw(*ourShader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.1f, 1.0f, 1.0f));
+        modelsList[0].Draw(*shader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        modelsList[1].Draw(*shader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
         //modelsList[0].updateTransformations(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
-        playerModel->Draw(*ourShader, glm::vec3(camera->Position.x, camera->Position.y-1.5, camera->Position.z+4), glm::vec3(1.0f, 1.0f, 1.0f));
+        playerModel->Draw(*shader, glm::vec3(camera->Position.x, camera->Position.y-1.5, camera->Position.z+4), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(camera->Rotation.y, camera->Rotation.x, camera->Rotation.z));
 
-        ui.draw(*ourShader);
+        ui.draw(*shader);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -533,7 +533,7 @@ void genRectangleEBO(const std::array<float, 120> vertices, const std::array<flo
   model = glm::translate(model, translation);
   model = glm::scale(model, glm::vec3(scaleAmmount[0], scaleAmmount[1], scaleAmmount[2]));
 
-  ourShader->setMat4("model", model);
+  shader->setMat4("model", model);
   //glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
   

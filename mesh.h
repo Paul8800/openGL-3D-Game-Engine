@@ -43,6 +43,7 @@ class Mesh {
     float height = -1.0f;
 
     glm::vec3 rotationOBB = glm::vec3(-1.0f, -1.0f, -1.0f);
+    vector<glm::vec3> rotatedDims;
 
     glm::vec3 halfExtents = glm::vec3(-1.0f, -1.0f, -1.0f);
     glm::vec3 localCenter;

@@ -1,5 +1,5 @@
-#ifndef COLLISION_H
-#define COLLISION_H
+#ifndef HITBOX_H
+#define HITBOX_H
 
 #include "include/glad/glad.h"
 #include "include/glm/glm.hpp"
@@ -17,45 +17,31 @@ using namespace std;
 #include "mesh.h"
 #include "model.h"
 
-class Collision {
+class Hitbox {
   public:
+    //Basic info
+    glm::vec3 center;
 
-    bool checkCollision(Model& modelA, Model& modelB, int precisionLvl) {
-      //Checks collision between 2 model.h objects
-      //
-      //precisionLvl - 0 means weakest, 3 means greatest, anything ouside 0-3 does greatest
-      
-      vector<Mesh>& meshesA = modelA.meshes;
-      vector<Mesh>& meshesB = modelB.meshes;
+    //Sphere specific info
+    glm::vec3 radius;
 
-      for (int a = 0; a < meshesA.size(); a++) {
-        for (int b = 0; b < meshesB.size(); b++) {
-      
-          if (meshesA[a].vertices.empty() || meshesB[b].vertices.empty()) break;
+    //AABB specific info
+    glm::vec3 dimensions;
 
-          if (sphere(meshesA[a], meshesB[b])) {
-            if (precisionLvl == 0) return true;
-            if (AABB(meshesA[a], meshesB[b])) {
-              if (precisionLvl == 1) return true;
-              if (OBB(meshesA[a], meshesB[b])) {
-                if (precisionLvl == 2) return true;
-                return convexHull(meshesA[a], meshesB[b]);
-              }
-            }
-          }
+    //OBB specific info
+    glm::vec3 rotation;
 
-        }
-      }
+    //ConvexHull specific info
 
-      return false;
-    }
 
-    bool checkRaycast() {
-
-    }
-
+    //Triangle specific info
     
-   
+
+    Hitbox(Mesh& obj, const char* type) {
+
+    }
+
+
 
   private:
     void initSphereBB(Mesh& Obj) {
@@ -261,8 +247,8 @@ bool OBB(Mesh& objA, Mesh& objB) {
     glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
     centerB = glm::vec3(rotationMatrixA * glm::vec4(centerB, 1.0f));
 
-    glm::vec3 dimA = objA.rotatedDims[objA.rotationOBB];//findAreaOfAABB(objA, rotationMatrixA);
-    glm::vec3 dimB = objB.rotatedDims[objA.rotationOBB];//findAreaOfAABB(objB, rotationMatrixA);
+    glm::vec3 dimA = findAreaOfAABB(objA, rotationMatrixA);
+    glm::vec3 dimB = findAreaOfAABB(objB, rotationMatrixA);
 
     /*std::cout << "" << std::endl;
     std::cout << "" << std::endl;

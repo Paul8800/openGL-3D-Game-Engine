@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 using namespace std;
 
 
@@ -51,6 +52,7 @@ class Collision {
     }
 
     bool checkRaycast() {
+      return false;
 
     }
 
@@ -199,7 +201,7 @@ void initOBB(Mesh& obj) {
     glm::vec3 AABBrotated = findAreaOfAABB(obj, model);
     if ((AABBrotated.x * AABBrotated.y * AABBrotated.z) < volume) {
       volume = AABBrotated.x * AABBrotated.y * AABBrotated.z;
-      optimalRotation.x = -x;
+      optimalRotation.x = x;
     }
 
   }
@@ -210,7 +212,7 @@ void initOBB(Mesh& obj) {
     glm::vec3 AABBrotated = findAreaOfAABB(obj, model);
     if ((AABBrotated.x * AABBrotated.y * AABBrotated.z) < volume) {
       volume = AABBrotated.x * AABBrotated.y * AABBrotated.z;
-      optimalRotation.y = -y;
+      optimalRotation.y = y;
     }
 
   }
@@ -221,7 +223,7 @@ void initOBB(Mesh& obj) {
     glm::vec3 AABBrotated = findAreaOfAABB(obj, model);
     if ((AABBrotated.x * AABBrotated.y * AABBrotated.z) < volume) {
       volume = AABBrotated.x * AABBrotated.y * AABBrotated.z;
-      optimalRotation.z = -z;
+      optimalRotation.z = z;
     }
 
     std::cout << "Rotation: " << optimalRotation.x << ", " << optimalRotation.y << ", " << optimalRotation.z << std::endl;
@@ -229,6 +231,43 @@ void initOBB(Mesh& obj) {
   }
       
   obj.rotationOBB = optimalRotation;
+}
+
+glm::vec3 rotatedDims(float length, float width, float height, glm::vec3 rotation) {
+    // Convert rotation angles (yaw, pitch, roll) from degrees to radians
+    float yaw = glm::radians(rotation.x);
+    float pitch = glm::radians(rotation.y);
+    float roll = glm::radians(rotation.z);
+
+    // Define the rotation matrices for yaw, pitch, and roll
+    glm::mat3 R_yaw = {
+        glm::vec3(cos(yaw), 0.0f, sin(yaw)),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(-sin(yaw), 0.0f, cos(yaw))
+    };
+
+    glm::mat3 R_pitch = {
+        glm::vec3(1.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, cos(pitch), -sin(pitch)),
+        glm::vec3(0.0f, sin(pitch), cos(pitch))
+    };
+
+    glm::mat3 R_roll = {
+        glm::vec3(cos(roll), -sin(roll), 0.0f),
+        glm::vec3(sin(roll), cos(roll), 0.0f),
+        glm::vec3(0.0f, 0.0f, 1.0f)
+    };
+
+    // Combine the rotation matrices: R = R_yaw * R_pitch * R_roll
+    glm::mat3 R = R_yaw * R_pitch * R_roll;
+
+    // Calculate the AABB dimensions
+    float newLength = std::abs(length * R[0][0]) + std::abs(width * R[0][1]) + std::abs(height * R[0][2]);
+    float newWidth = std::abs(length * R[1][0]) + std::abs(width * R[1][1]) + std::abs(height * R[1][2]);
+    float newHeight = std::abs(length * R[2][0]) + std::abs(width * R[2][1]) + std::abs(height * R[2][2]);
+
+    // Return the new dimensions as a glm::vec3
+    return glm::vec3(newLength, newWidth, newHeight);
 }
 
 
@@ -250,9 +289,9 @@ bool OBB(Mesh& objA, Mesh& objB) {
 
     // Transform and check overlap in objA's reference frame
     glm::mat4 rotationMatrixA = glm::mat4(1.0f);
-    rotationMatrixA = glm::rotate(rotationMatrixA, glm::radians(objA.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    rotationMatrixA = glm::rotate(rotationMatrixA, glm::radians(objA.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    rotationMatrixA = glm::rotate(rotationMatrixA, glm::radians(objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    rotationMatrixA = glm::rotate(rotationMatrixA, glm::radians(-objA.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    rotationMatrixA = glm::rotate(rotationMatrixA, glm::radians(-objA.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationMatrixA = glm::rotate(rotationMatrixA, glm::radians(-objA.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
 
     glm::vec3 centerA = glm::vec3(objA.modelTrans * glm::vec4(objA.center, 1.0f));
@@ -261,8 +300,8 @@ bool OBB(Mesh& objA, Mesh& objB) {
     glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
     centerB = glm::vec3(rotationMatrixA * glm::vec4(centerB, 1.0f));
 
-    glm::vec3 dimA = objA.rotatedDims[objA.rotationOBB];//findAreaOfAABB(objA, rotationMatrixA);
-    glm::vec3 dimB = objB.rotatedDims[objA.rotationOBB];//findAreaOfAABB(objB, rotationMatrixA);
+    glm::vec3 dimA = rotatedDims(objA.length, objA.width, objA.height, objA.rotationOBB);//objA.rotatedDims[objA.rotationOBB];//findAreaOfAABB(objA, rotationMatrixA);
+    glm::vec3 dimB = rotatedDims(objB.length, objB.width, objB.height, objA.rotationOBB);//objB.rotatedDims[objA.rotationOBB];//findAreaOfAABB(objB, rotationMatrixA);
 
     /*std::cout << "" << std::endl;
     std::cout << "" << std::endl;
@@ -282,9 +321,9 @@ bool OBB(Mesh& objA, Mesh& objB) {
 
     // Transform and check overlap in objB's reference frame
     glm::mat4 rotationMatrixB = glm::mat4(1.0f);
-    rotationMatrixB = glm::rotate(rotationMatrixB, glm::radians(objB.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    rotationMatrixB = glm::rotate(rotationMatrixB, glm::radians(objB.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    rotationMatrixB = glm::rotate(rotationMatrixB, glm::radians(objB.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
+    rotationMatrixB = glm::rotate(rotationMatrixB, glm::radians(-objB.rotationOBB.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    rotationMatrixB = glm::rotate(rotationMatrixB, glm::radians(-objB.rotationOBB.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    rotationMatrixB = glm::rotate(rotationMatrixB, glm::radians(-objB.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
     centerA = glm::vec3(objA.modelTrans * glm::vec4(objA.center, 1.0f));
     centerA = glm::vec3(rotationMatrixA * glm::vec4(centerA, 1.0f));
@@ -292,8 +331,8 @@ bool OBB(Mesh& objA, Mesh& objB) {
     centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
     centerB = glm::vec3(rotationMatrixB * glm::vec4(centerB, 1.0f));
 
-    dimA = findAreaOfAABB(objA, rotationMatrixB);
-    dimB = findAreaOfAABB(objB, rotationMatrixB);
+    dimA = rotatedDims(objA.length, objA.width, objA.height, objB.rotationOBB);//findAreaOfAABB(objA, rotationMatrixB);
+    dimB = rotatedDims(objB.length, objB.width, objB.height, objB.rotationOBB);//findAreaOfAABB(objB, rotationMatrixB);
 
 
     /*std::cout << "" << std::endl;

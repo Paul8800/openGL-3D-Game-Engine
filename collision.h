@@ -235,9 +235,9 @@ void initOBB(Mesh& obj) {
 
 glm::vec3 rotatedDims(float length, float width, float height, glm::vec3 rotation) {
     // Convert rotation angles (yaw, pitch, roll) from degrees to radians
-    float yaw = glm::radians(rotation.x);
-    float pitch = glm::radians(rotation.y);
-    float roll = glm::radians(rotation.z);
+    float yaw = glm::radians(-rotation.x);
+    float pitch = glm::radians(-rotation.y);
+    float roll = glm::radians(-rotation.z);
 
     // Define the rotation matrices for yaw, pitch, and roll
     glm::mat3 R_yaw = {
@@ -300,8 +300,12 @@ bool OBB(Mesh& objA, Mesh& objB) {
     glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
     centerB = glm::vec3(rotationMatrixA * glm::vec4(centerB, 1.0f));
 
-    glm::vec3 dimA = rotatedDims(objA.length, objA.width, objA.height, objA.rotationOBB);//objA.rotatedDims[objA.rotationOBB];//findAreaOfAABB(objA, rotationMatrixA);
-    glm::vec3 dimB = rotatedDims(objB.length, objB.width, objB.height, objA.rotationOBB);//objB.rotatedDims[objA.rotationOBB];//findAreaOfAABB(objB, rotationMatrixA);
+    glm::vec3 dimA = findAreaOfAABB(objA, rotationMatrixA);
+    glm::vec3 dimB = findAreaOfAABB(objB, rotationMatrixA);
+    //glm::vec3 dimA = rotatedDims(objA.length, objA.width, objA.height, objA.rotationOBB);
+    //glm::vec3 dimB = rotatedDims(objB.length, objB.width, objB.height, objA.rotationOBB);
+
+
 
     /*std::cout << "" << std::endl;
     std::cout << "" << std::endl;
@@ -326,13 +330,16 @@ bool OBB(Mesh& objA, Mesh& objB) {
     rotationMatrixB = glm::rotate(rotationMatrixB, glm::radians(-objB.rotationOBB.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
     centerA = glm::vec3(objA.modelTrans * glm::vec4(objA.center, 1.0f));
-    centerA = glm::vec3(rotationMatrixA * glm::vec4(centerA, 1.0f));
+    centerA = glm::vec3(rotationMatrixB * glm::vec4(centerA, 1.0f));
 
     centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.center, 1.0f));
     centerB = glm::vec3(rotationMatrixB * glm::vec4(centerB, 1.0f));
 
-    dimA = rotatedDims(objA.length, objA.width, objA.height, objB.rotationOBB);//findAreaOfAABB(objA, rotationMatrixB);
-    dimB = rotatedDims(objB.length, objB.width, objB.height, objB.rotationOBB);//findAreaOfAABB(objB, rotationMatrixB);
+    dimA = findAreaOfAABB(objA, rotationMatrixB);
+    dimB = findAreaOfAABB(objB, rotationMatrixB);
+    //dimA = rotatedDims(objA.length, objA.width, objA.height, objB.rotationOBB);
+    //dimB = rotatedDims(objB.length, objB.width, objB.height, objB.rotationOBB);
+
 
 
     /*std::cout << "" << std::endl;
@@ -355,174 +362,78 @@ bool OBB(Mesh& objA, Mesh& objB) {
     return true;
 }
 
-
-
-
-
-
-
-
-void initOBB2(Mesh& obj) {
-    glm::vec3 minPoint = obj.vertices[0].Position;
-    glm::vec3 maxPoint = obj.vertices[0].Position;
-
-    for (const auto& vertex : obj.vertices) {
-        minPoint = glm::min(minPoint, vertex.Position);
-        maxPoint = glm::max(maxPoint, vertex.Position);
-    }
-
-    // Set the local center and half-extents in local space
-    obj.localCenter = (maxPoint + minPoint) / 2.0f;
-    obj.halfExtents = (maxPoint - minPoint) / 2.0f;
-
-    // Transform axes (identity by default, updated in OBB collision check)
-    obj.axes[0] = glm::vec3(1.0f, 0.0f, 0.0f); // X-axis
-    obj.axes[1] = glm::vec3(0.0f, 1.0f, 0.0f); // Y-axis
-    obj.axes[2] = glm::vec3(0.0f, 0.0f, 1.0f); // Z-axis
-}
-
-
-    
-
-bool OBB2(Mesh& objA, Mesh& objB) {
-    if (objA.halfExtents.x == -1.0f) initOBB(objA);
-    if (objB.halfExtents.x == -1.0f) initOBB(objB);
-
-    // Transform centers into world space
-    glm::vec3 centerA = glm::vec3(objA.modelTrans * glm::vec4(objA.localCenter, 1.0f));
-    glm::vec3 centerB = glm::vec3(objB.modelTrans * glm::vec4(objB.localCenter, 1.0f));
-
-    // Extract axes from transformations
-    glm::vec3 axesA[3] = {
-        glm::normalize(glm::vec3(objA.modelTrans * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f))),
-        glm::normalize(glm::vec3(objA.modelTrans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f))),
-        glm::normalize(glm::vec3(objA.modelTrans * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)))
-    };
-
-    glm::vec3 axesB[3] = {
-        glm::normalize(glm::vec3(objB.modelTrans * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f))),
-        glm::normalize(glm::vec3(objB.modelTrans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f))),
-        glm::normalize(glm::vec3(objB.modelTrans * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)))
-    };
-
-    glm::vec3 T = centerB - centerA; // Vector between centers
-    glm::mat3 R, AbsR;
-
-    const float EPSILON = 1e-6f;
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            R[i][j] = glm::dot(axesA[i], axesB[j]);
-            AbsR[i][j] = std::abs(R[i][j]) + EPSILON;
-        }
-    }
-
-    // Test axes A[i]
-    for (int i = 0; i < 3; ++i) {
-        float ra = objA.halfExtents[i];
-        float rb = objB.halfExtents.x * AbsR[i][0] + objB.halfExtents.y * AbsR[i][1] + objB.halfExtents.z * AbsR[i][2];
-        if (std::abs(glm::dot(T, axesA[i])) > ra + rb) return false;
-    }
-
-    // Test axes B[j]
-    for (int i = 0; i < 3; ++i) {
-        float ra = objA.halfExtents.x * AbsR[0][i] + objA.halfExtents.y * AbsR[1][i] + objA.halfExtents.z * AbsR[2][i];
-        float rb = objB.halfExtents[i];
-        if (std::abs(glm::dot(T, axesB[i])) > ra + rb) return false;
-    }
-
-    // Test cross products of A[i] and B[j]
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            float ra = objA.halfExtents[(i + 1) % 3] * AbsR[(i + 2) % 3][j] +
-                       objA.halfExtents[(i + 2) % 3] * AbsR[(i + 1) % 3][j];
-            float rb = objB.halfExtents[(j + 1) % 3] * AbsR[i][(j + 2) % 3] +
-                       objB.halfExtents[(j + 2) % 3] * AbsR[i][(j + 1) % 3];
-            if (std::abs(T[i] * R[i][j]) > ra + rb) return false;
-        }
-    }
-
-    return true; // No separating axis found, OBBs are colliding
-}
-
-
-
-
-
-
-
-void projectVerticesOntoAxis(const std::vector<glm::vec3>& vertices, const glm::vec3& axis, float& min, float& max) {
-        min = max = glm::dot(vertices[0], axis);
-        for (const auto& vertex : vertices) {
-            float projection = glm::dot(vertex, axis);
-            if (projection < min) min = projection;
-            if (projection > max) max = projection;
-        }
-    }
-
-    bool SATConvexHull(const Mesh& objA, const Mesh& objB) {
-        std::vector<glm::vec3> axes;
-
-        axes.insert(axes.end(), objA.faceNormals.begin(), objA.faceNormals.end());
-        axes.insert(axes.end(), objB.faceNormals.begin(), objB.faceNormals.end());
-
-        for (size_t i = 0; i < objA.convexHullVertices.size(); ++i) {
-            glm::vec3 edgeA = objA.convexHullVertices[(i + 1) % objA.convexHullVertices.size()] - objA.convexHullVertices[i];
-            for (size_t j = 0; j < objB.convexHullVertices.size(); ++j) {
-                glm::vec3 edgeB = objB.convexHullVertices[(j + 1) % objB.convexHullVertices.size()] - objB.convexHullVertices[j];
-                glm::vec3 axis = glm::normalize(glm::cross(edgeA, edgeB));
-                if (glm::length(axis) > 1e-6f) {
-                    axes.push_back(axis);
-                }
-            }
-        }
-
-        for (const auto& axis : axes) {
-            float minA, maxA, minB, maxB;
-            projectVerticesOntoAxis(objA.convexHullVertices, axis, minA, maxA);
-            projectVerticesOntoAxis(objB.convexHullVertices, axis, minB, maxB);
-            if (maxA < minB || maxB < minA) {
-                return false;
-            }
-        }
-
+    bool convexHull(Mesh& objA, Mesh& objB) {
         return true;
     }
 
-    void initConvexHull(Mesh& obj) {
-        obj.convexHullVertices = computeConvexHull(obj);
 
-        obj.faceNormals.clear();
-        for (size_t i = 0; i < obj.convexHullVertices.size(); i += 3) {
-            glm::vec3 v0 = obj.convexHullVertices[i];
-            glm::vec3 v1 = obj.convexHullVertices[i + 1];
-            glm::vec3 v2 = obj.convexHullVertices[i + 2];
-            glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
-            obj.faceNormals.push_back(normal);
+
+    // Helper function to transform a vertex by a model matrix
+glm::vec3 transformVertex(const glm::vec3& vertex, const glm::mat4& modelMatrix) {
+    return glm::vec3(modelMatrix * glm::vec4(vertex, 1.0f));
+}
+
+// Helper function to check if a point lies inside a triangle
+bool pointInTriangle(const glm::vec3& point, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2) {
+    glm::vec3 u = v1 - v0;
+    glm::vec3 v = v2 - v0;
+    glm::vec3 w = point - v0;
+
+    float uu = glm::dot(u, u);
+    float uv = glm::dot(u, v);
+    float vv = glm::dot(v, v);
+    float wu = glm::dot(w, u);
+    float wv = glm::dot(w, v);
+
+    float denominator = uv * uv - uu * vv;
+    float s = (uv * wv - vv * wu) / denominator;
+    float t = (uv * wu - uu * wv) / denominator;
+
+    return (s >= 0.0f) && (t >= 0.0f) && (s + t <= 1.0f);
+}
+
+// Function to check if two triangles intersect
+bool triangleIntersection(const glm::vec3& A1, const glm::vec3& A2, const glm::vec3& A3,
+                          const glm::vec3& B1, const glm::vec3& B2, const glm::vec3& B3) {
+    // Check if any vertex of one triangle is inside the other
+    if (pointInTriangle(A1, B1, B2, B3) || pointInTriangle(A2, B1, B2, B3) || pointInTriangle(A3, B1, B2, B3)) {
+        return true;
+    }
+    if (pointInTriangle(B1, A1, A2, A3) || pointInTriangle(B2, A1, A2, A3) || pointInTriangle(B3, A1, A2, A3)) {
+        return true;
+    }
+
+    // Edge-edge intersection tests can be added here (optional).
+
+    return false;
+}
+
+// Main function to check if two meshes collide
+bool triangle(Mesh& objA, Mesh& objB) {
+    // Transform the bounding sphere centers
+    glm::vec3 transformedCenterA = transformVertex(objA.center, objA.modelTrans);
+    glm::vec3 transformedCenterB = transformVertex(objB.center, objB.modelTrans);
+
+
+    // Iterate over all triangles in both meshes
+    for (size_t i = 0; i < objA.indices.size(); i += 3) {
+        glm::vec3 A1 = transformVertex(objA.vertices[objA.indices[i]].Position, objA.modelTrans);
+        glm::vec3 A2 = transformVertex(objA.vertices[objA.indices[i + 1]].Position, objA.modelTrans);
+        glm::vec3 A3 = transformVertex(objA.vertices[objA.indices[i + 2]].Position, objA.modelTrans);
+
+        for (size_t j = 0; j < objB.indices.size(); j += 3) {
+            glm::vec3 B1 = transformVertex(objB.vertices[objB.indices[j]].Position, objB.modelTrans);
+            glm::vec3 B2 = transformVertex(objB.vertices[objB.indices[j + 1]].Position, objB.modelTrans);
+            glm::vec3 B3 = transformVertex(objB.vertices[objB.indices[j + 2]].Position, objB.modelTrans);
+
+            if (triangleIntersection(A1, A2, A3, B1, B2, B3)) {
+                return true;
+            }
         }
     }
 
-std::vector<glm::vec3> computeConvexHull(Mesh& obj) {
-    std::vector<glm::vec3> convexHullVertices;
-
-    // A simple placeholder convex hull implementation: you'll need a more advanced algorithm here
-    // For now, assume that you are using a library or implementing an algorithm like Quickhull
-    // The convex hull computation algorithm would go here
-    
-    // Example (this is not a real convex hull algorithm):
-    convexHullVertices.push_back(glm::vec3(1.0f, 1.0f, 1.0f));  // Add some example points
-    convexHullVertices.push_back(glm::vec3(-1.0f, 1.0f, 1.0f));
-    convexHullVertices.push_back(glm::vec3(1.0f, -1.0f, 1.0f));
-    convexHullVertices.push_back(glm::vec3(-1.0f, -1.0f, 1.0f));
-
-    // Real convex hull code should calculate the convex hull vertices based on obj.vertices.
-    return convexHullVertices;
+    return false;
 }
-
-    bool convexHull(Mesh& objA, Mesh& objB) {
-        initConvexHull(objA);
-        initConvexHull(objB);
-        return SATConvexHull(objA, objB);
-    }
 
 };
 

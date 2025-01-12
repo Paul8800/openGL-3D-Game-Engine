@@ -22,7 +22,10 @@ Working on:
 - OBB
 - Convex Hull (in progress)
 - Triangle Collision (in progress)
-- Raycasting
+
+- Raycasting (in progress)
+- Capsule (in progress)
+- Heightmap (in progress)
 
 ### Code Sources
 - [LearnOpenGL.com](https://learnopengl.com)

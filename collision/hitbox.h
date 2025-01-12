@@ -1,12 +1,12 @@
 #ifndef HITBOX_H
 #define HITBOX_H
 
-#include "include/glad/glad.h"
-#include "include/glm/glm.hpp"
-#include "include/glm/gtc/matrix_transform.hpp"
+#include "../include/glad/glad.h"
+#include "../include/glm/glm.hpp"
+#include "../include/glm/gtc/matrix_transform.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include "include/glm/gtx/string_cast.hpp" // For glm::to_string
+#include "../include/glm/gtx/string_cast.hpp" // For glm::to_string
 
 #include <string>
 #include <vector>
@@ -14,8 +14,8 @@
 using namespace std;
 
 
-#include "mesh.h"
-#include "model.h"
+#include "../mesh.h"
+#include "../model.h"
 
 class Hitbox {
   public:

@@ -142,7 +142,7 @@ int main()
     //Model ourModel("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj");//FileSystem::getPath("blender/map1.blend"));
     //Model ourModel("FileSystem::getPath("blender/map1.blend"));
     
-    playerModel = new Model("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj");
+    playerModel = new Model("/home/paul/NeoVimProjects/tacticalShooter/blender/cube.obj");
     modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLineOBB.obj"));
     modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj"));
     //modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/dust2.obj"));

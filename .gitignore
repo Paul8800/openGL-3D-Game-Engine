@@ -4,6 +4,8 @@
 
 !collision/
 
+!audio/
+
 !shaders/
 !shader.h
 !mesh.h

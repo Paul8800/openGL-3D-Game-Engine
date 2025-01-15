@@ -40,7 +40,7 @@ class Collision {
               if (precisionLvl == 1) return true;
               if (OBB(meshesA[a], meshesB[b])) {
                 if (precisionLvl == 2) return true;
-                return convexHull(meshesA[a], meshesB[b]);
+                return triangle(meshesA[a], meshesB[b]);
               }
             }
           }

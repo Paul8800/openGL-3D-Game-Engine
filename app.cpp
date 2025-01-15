@@ -1,9 +1,11 @@
-//RC: g++ -g -o /home/paul/NeoVimProjects/temp/temp app.cpp glad/glad.c -I./glad -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp
+//RC: g++ -g -o /home/paul/NeoVimProjects/temp/temp app.cpp glad/glad.c -I./glad -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp audio/audio.cpp -lopenal
 #include "include/glad/glad.h"
 #include <GLFW/glfw3.h>
 #include "include/glm/glm.hpp"
 #include "include/glm/gtc/matrix_transform.hpp"
 #include "include/glm/gtc/type_ptr.hpp"
+#include <AL/al.h>
+#include <AL/alc.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "include/stb_image.h"
@@ -14,6 +16,8 @@
 #include "collision.h"
 #include "camera.h"
 #include "ui.h"
+#include "audio/audio.h"
+
 
 #include <iostream>
 #include <unordered_map>
@@ -25,7 +29,6 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
-
 
 std::vector<Model> modelsList;
 
@@ -143,10 +146,12 @@ int main()
     //Model ourModel("FileSystem::getPath("blender/map1.blend"));
     
     playerModel = new Model("/home/paul/NeoVimProjects/tacticalShooter/blender/cube.obj");
-    modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLineOBB.obj"));
+    //modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/randomLineOBB.obj"));
+    modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/dust2.obj"));
     modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/backpack/backpack.obj"));
     //modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/dust2.obj"));
     modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/UItest.obj"));
+    modelsList.push_back(Model("/home/paul/NeoVimProjects/tacticalShooter/blender/dust2Floor.obj"));
 
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
@@ -291,7 +296,7 @@ int main()
           genRectangleEBO(block, cubeObjectList[i].location, cubeObjectList[i].scaleAmount);
         }
         
-        modelsList[0].Draw(*shader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        modelsList[3].Draw(*shader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
         modelsList[1].Draw(*shader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
         //modelsList[0].updateTransformations(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -335,6 +340,17 @@ bool checkCollision(const Cube& cubeA, const Cube& cubeB) {
                     (cubeA.location[2] - cubeA.scaleAmount[2] < cubeB.location[2] + cubeB.scaleAmount[2]);
 
     // Return true if there is overlap in all three axes
+    /*if (overlapX && overlapY && overlapZ) {
+        std::thread t1(
+            [](){
+                playAudio();
+            }
+        );
+        t1.detach();
+    }*/
+    if (overlapX && overlapY && overlapZ) {
+        playAudio();
+    }
     return overlapX && overlapY && overlapZ;
 }
 
@@ -367,17 +383,17 @@ bool playerMove(glm::vec3 movement) {
   
   camera->Position.x += ogMovement.x;
   playerModel->updateTransformations(glm::vec3(camera->Position.x, camera->Position.y-1.5, camera->Position.z+4.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-  if (clsn.checkCollision(modelsList[0], *playerModel, 2)) { movement.x = 0;}
+  if (clsn.checkCollision(modelsList[3], *playerModel, 1)) { movement.x = 0;}
   camera->Position.x -= ogMovement.x;
 
   camera->Position.y += ogMovement.y;
   playerModel->updateTransformations(glm::vec3(camera->Position.x, camera->Position.y-1.5, camera->Position.z+4.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-  if (clsn.checkCollision(modelsList[0], *playerModel, 2)) { movement.y = 0;}
+  if (clsn.checkCollision(modelsList[3], *playerModel, 1)) { movement.y = 0;}
   camera->Position.y -= ogMovement.y;
 
   camera->Position.z += ogMovement.z;
   playerModel->updateTransformations(glm::vec3(camera->Position.x, camera->Position.y-1.5, camera->Position.z+4.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-  if (clsn.checkCollision(modelsList[0], *playerModel, 2)) { movement.z = 0;}
+  if (clsn.checkCollision(modelsList[3], *playerModel, 1)) { movement.z = 0;}
   camera->Position.z -= ogMovement.z;
 
 

@@ -11,25 +11,26 @@
 #include <sstream>
 #include <iostream>
 
+#include "collision.h"
+
 class player
 {
 public:
     unsigned int ID;
 
-    float location;
-
-    string username;
-    float health = 100;
-
-    float acceleration = 0;
+    float position;
+    glm::vec3 momentum = glm::vec3(0);
+    bool isOnGround = false;
     
-    // constructor generates the shader on the fly
-    // ------------------------------------------------------------------------
+    // Constructor
     player() {
     }
-    // activate the shader
-    // ------------------------------------------------------------------------
-    void move() { 
+
+    void move(glm::vec3 movement, bool momentumBased) { 
+        if (momentumBased) movement *= momentum;
+
       
     }
+public:
+};
 #endif

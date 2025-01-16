@@ -1,4 +1,4 @@
-//RC: g++ -g -o /home/paul/NeoVimProjects/temp/temp app.cpp glad/glad.c -I./glad -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp audio/audio.cpp -lopenal
+//RC: g++ -g -o /home/paul/NeoVimProjects/temp/temp app.cpp glad/glad.c -I./glad -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp -lopenal
 #include "include/glad/glad.h"
 #include <GLFW/glfw3.h>
 #include "include/glm/glm.hpp"
@@ -29,6 +29,12 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+
+
+Audio* audio = nullptr;
+
+std::vector<ALuint> speakerList;
+std::vector<ALuint> soundList;
 
 std::vector<Model> modelsList;
 
@@ -243,6 +249,12 @@ int main()
   ui.addElements(modelsList[2], {0, 0}, 10);
 
 
+    audio = new Audio();
+
+    for (int i = 0; i < 60; i++) speakerList.push_back(audio->createSpeaker());
+    soundList.push_back(audio->genBuffer("audio/files/smallCrash.wav"));
+
+
     // render loop
     // ----------------------------------------------------------------------------------------------------------------------------------------------
     while (!glfwWindowShouldClose(window)) {
@@ -296,7 +308,7 @@ int main()
           genRectangleEBO(block, cubeObjectList[i].location, cubeObjectList[i].scaleAmount);
         }
         
-        modelsList[3].Draw(*shader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+        modelsList[3].Draw(*shader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(5.0f, 5.0f, 5.0f));
         modelsList[1].Draw(*shader, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
         //modelsList[0].updateTransformations(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -340,16 +352,16 @@ bool checkCollision(const Cube& cubeA, const Cube& cubeB) {
                     (cubeA.location[2] - cubeA.scaleAmount[2] < cubeB.location[2] + cubeB.scaleAmount[2]);
 
     // Return true if there is overlap in all three axes
-    /*if (overlapX && overlapY && overlapZ) {
-        std::thread t1(
-            [](){
-                playAudio();
-            }
-        );
-        t1.detach();
-    }*/
     if (overlapX && overlapY && overlapZ) {
-        playAudio();
+        //std::thread t1(playAudio);
+        //std::thread t1(sound->play(speakerList[0], soundList[0]));
+        std::thread t1([=]() {
+            for (int i = 0; i < 60; i++) {
+                if (audio->play(speakerList[i], soundList[0]))
+                    break;
+            }
+        });
+        t1.detach();
     }
     return overlapX && overlapY && overlapZ;
 }

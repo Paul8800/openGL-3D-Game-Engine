@@ -5,14 +5,14 @@ Implimented:
 - Collision
 - Model loading
 - 2D GUI
+- Audio Engine
 
 Working on:
 - Lighting
-- Audio (mic input, positional audio, music, sound effects)
 - Animations
 - Particles
 - AI Pathfinding
-- Mesh Culling
+- Draw Call Culling
 - Save States
 - Networking Multiplayer
 
@@ -26,6 +26,13 @@ Working on:
 - Raycasting (in progress)
 - Capsule (in progress)
 - Heightmap (in progress)
+
+### Audio Engine:
+- Load audio files and play them (in progress)
+- Positional Audio (in progress)
+- Differnt types of audio supported (sound effects, constant music) (in progress)
+
+- Audio input with microphone (in progress)
 
 ### Code Sources
 - [LearnOpenGL.com](https://learnopengl.com)

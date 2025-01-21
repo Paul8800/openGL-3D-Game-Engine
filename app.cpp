@@ -32,6 +32,8 @@
 
 
 Audio* audio = nullptr;
+Speaker speaker;
+Sound sound;
 
 std::vector<ALuint> speakerList;
 std::vector<ALuint> soundList;
@@ -251,8 +253,11 @@ int main()
 
     audio = new Audio();
 
+    speaker = audio->createSpeaker(10);
+    sound = audio->loadFile2("audio/files/smallCrash.wav");
+
     for (int i = 0; i < 60; i++) speakerList.push_back(audio->createSpeaker());
-    soundList.push_back(audio->genBuffer("audio/files/smallCrash.wav"));
+    soundList.push_back(audio->genBuffer("audio/files/smallCrashMono.wav"));
 
 
     // render loop
@@ -352,7 +357,7 @@ bool checkCollision(const Cube& cubeA, const Cube& cubeB) {
                     (cubeA.location[2] - cubeA.scaleAmount[2] < cubeB.location[2] + cubeB.scaleAmount[2]);
 
     // Return true if there is overlap in all three axes
-    if (overlapX && overlapY && overlapZ) {
+    if (overlapX && overlapY && overlapZ && false) {
         //std::thread t1(playAudio);
         //std::thread t1(sound->play(speakerList[0], soundList[0]));
         std::thread t1([=]() {
@@ -360,6 +365,15 @@ bool checkCollision(const Cube& cubeA, const Cube& cubeB) {
                 if (audio->play(speakerList[i], soundList[0]))
                     break;
             }
+        });
+        t1.detach();
+        std::cout << "test" << std::endl;
+    }
+
+    if (overlapX && overlapY && overlapZ) {
+        //std::thread t1([=](){audio->play(speaker, sound);});
+        std::thread t1([=]() {
+                audio->play(speaker, sound);
         });
         t1.detach();
     }
